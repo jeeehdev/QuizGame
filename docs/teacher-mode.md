@@ -46,6 +46,8 @@ SELECT g.score_id, g.nickname, g.answers FROM games g WHERE g.finished = 1 AND g
 
 - `correct_by_category`는 JSON(`{"history":2,"science":3,"geography":4,"arts":3}`), 카테고리마다 10문제, 점수는 맞힌 수 × 10 (400점 만점)
 - `answers`는 JSON 배열(`questionId`, `correct`). 문제 내용은 `server/data/questions.json`과 `question-candidates.json`에서 id로 찾는다
+- 문제별 답안은 **학생 단위로 센다**: 한 학생이 최근 24시간 안에 여러 번 완료했으면 그 학생의 **가장 최근 완료 게임 하나만** 쓴다. 게임 수로 세면 여러 번 푼 학생이 여러 명처럼 세진다
+- 중간에 나간 게임도 명단 학생의 것만 센다 (`games.nickname`을 명단으로 찾는다)
 - 카테고리 이름: history 한국사, science 과학, geography 지리, arts 예술과 문화
 
 ## 기간 인자
@@ -66,6 +68,15 @@ SELECT g.score_id, g.nickname, g.answers FROM games g WHERE g.finished = 1 AND g
 - **카테고리별 정답률**: 모든 완료 기록의 카테고리별 맞힌 수 합 ÷ (기록 수 × 10)
 - 기록이 없는 학생은 "미응시"로 표시한다
 - **반 평균**은 응시한 학생들의 평균 점수의 평균, **표준편차**는 같은 값들의 모집단 표준편차다
+
+## 빠른 기록 (⏱️)
+
+40문제를 **80초 미만**(문제당 평균 2초 미만)에 끝낸 기록은 문제를 읽지 않고 눌렀을 수 있다. `/quiz-leaderboard check`의 "비정상적으로 빠른 기록"과 같은 기준이다.
+
+- **분석에서 빼지 않는다.** 평균, 등급, 순위, 정답률, 추이 계산에 다른 기록과 똑같이 넣는다
+- 대신 보이게 표시한다: 기록에 ⏱️를 붙이고, 학생 줄에는 "빠른 기록 N/M건"(M은 그 학생의 기간 안 기록 수)을 적는다
+- 기간 안 기록의 절반 이상이 빠른 기록이면, 결과를 실력으로 보기 어렵다는 주의 문장을 요약 맨 앞에 쓴다
+- 문제별 분석에 쓴 학생의 최근 게임이 빠른 기록이면 그 학생 이름 옆에도 ⏱️를 붙인다
 
 ## 등급 (상대평가)
 
