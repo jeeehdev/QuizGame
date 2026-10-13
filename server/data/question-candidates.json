@@ -1,1 +1,20 @@
-[]
+[
+  {
+    "id": "geo-11",
+    "category": "geography",
+    "difficulty": "easy",
+    "question": "대륙을 제외하고, 면적이 세계에서 가장 넓은 섬은?",
+    "choices": ["뉴기니섬", "그린란드", "보르네오섬", "마다가스카르섬"],
+    "answerIndex": 1,
+    "explanation": "그린란드는 면적이 약 217만㎢로, 대륙인 오스트레일리아를 빼면 세계에서 가장 큰 섬입니다. 2위는 뉴기니섬입니다."
+  },
+  {
+    "id": "hist-11",
+    "category": "history",
+    "difficulty": "medium",
+    "question": "676년 당나라 군대를 몰아내고 삼국 통일을 완성한 신라의 왕은?",
+    "choices": ["무열왕", "진흥왕", "문무왕", "신문왕"],
+    "answerIndex": 2,
+    "explanation": "문무왕은 매소성·기벌포 싸움에서 당군을 물리쳐 676년 삼국 통일을 완성했습니다. 아버지 무열왕은 백제를 멸망시켰습니다."
+  }
+]
