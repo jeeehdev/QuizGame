@@ -51,7 +51,7 @@ describe('App with the server', () => {
         await screen.findByRole('group', { name: /보기/ }, INTRO_WAIT)
       }
       expect(screen.getByText(`${i + 1}/40`)).toBeTruthy()
-      expect(document.activeElement?.tagName).toBe('H2')
+      await waitFor(() => expect(document.activeElement?.tagName).toBe('H2'))
 
       // Answer the first 25 correctly.
       const q = shownQuestion()
