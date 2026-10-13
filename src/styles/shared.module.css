@@ -1,0 +1,20 @@
+.primaryButton {
+  min-height: 52px;
+  padding: 0 20px;
+  border: none;
+  border-radius: var(--radius);
+  background: var(--primary);
+  color: var(--on-primary);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.primaryButton:hover {
+  background: var(--primary-hover);
+}
+
+.primaryButton:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}

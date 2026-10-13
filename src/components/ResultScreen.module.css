@@ -1,0 +1,87 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 40px 20px 32px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.25rem;
+  text-align: center;
+  word-break: keep-all;
+}
+
+.score {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+}
+
+.scoreValue {
+  font-size: 3.5rem;
+  font-weight: 800;
+  color: var(--primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.scoreMax {
+  font-size: 1.125rem;
+  color: var(--text-muted);
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 0;
+}
+
+.summary div {
+  padding: 12px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  text-align: center;
+}
+
+.summary dt {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.summary dd {
+  margin: 4px 0 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.subtitle {
+  margin: 8px 0 0;
+  font-size: 1rem;
+}
+
+.categories {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.categories li {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--border);
+}
+
+.categories strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.restart {
+  composes: primaryButton from '../styles/shared.module.css';
+  margin-top: 16px;
+}

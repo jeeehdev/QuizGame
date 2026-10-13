@@ -1,0 +1,85 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 48px 20px 32px;
+}
+
+.title {
+  margin: 0;
+  font-size: 2rem;
+  text-align: center;
+}
+
+.rules {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rules li {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 4px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.rules strong {
+  font-size: 1.5rem;
+  color: var(--primary);
+}
+
+.order {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.label {
+  font-weight: 600;
+}
+
+.input {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+
+.input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.input[aria-invalid='true'] {
+  border-color: var(--wrong);
+}
+
+.error {
+  min-height: 1.4em;
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--wrong);
+}
+
+.start {
+  composes: primaryButton from '../styles/shared.module.css';
+}

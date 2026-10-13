@@ -1,0 +1,140 @@
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 16px 20px 32px;
+}
+
+/* Leave room so the feedback sheet never hides the choices. */
+.withSheet {
+  padding-bottom: 300px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.progress {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+  transition: width 200ms ease-out;
+}
+
+.meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+}
+
+.category {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.number {
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.score {
+  margin-left: auto;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.question {
+  margin: 8px 0;
+  font-size: 1.25rem;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 10px 14px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background-color 120ms,
+    border-color 120ms;
+}
+
+.choice:hover:not(:disabled) {
+  border-color: var(--primary);
+}
+
+.choice:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.choice:disabled {
+  cursor: default;
+}
+
+.choiceNumber {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--surface);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.choiceText {
+  flex: 1;
+  word-break: keep-all;
+}
+
+.choiceMark {
+  flex: none;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.correct {
+  border-color: var(--correct);
+  background: var(--correct-soft);
+  color: var(--correct-text);
+}
+
+.wrong {
+  border-color: var(--wrong);
+  background: var(--wrong-soft);
+  color: var(--wrong-text);
+}
+
+.dimmed {
+  opacity: 0.55;
+}

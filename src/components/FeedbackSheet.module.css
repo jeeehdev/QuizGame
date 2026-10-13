@@ -1,0 +1,83 @@
+.sheet {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+  border-top: 4px solid;
+  border-radius: 16px 16px 0 0;
+  background: var(--bg);
+  box-shadow: 0 -8px 24px rgb(0 0 0 / 0.15);
+  animation: slideUp 180ms ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+
+.correct {
+  border-color: var(--correct);
+}
+
+.wrong {
+  border-color: var(--wrong);
+}
+
+.verdict {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.correct .verdict {
+  color: var(--correct-text);
+}
+
+.wrong .verdict {
+  color: var(--wrong-text);
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 1.125rem;
+}
+
+.correct .icon {
+  background: var(--correct);
+}
+
+.wrong .icon {
+  background: var(--wrong);
+}
+
+.answer {
+  margin: 0;
+  font-weight: 700;
+}
+
+.explanation {
+  margin: 0 0 8px;
+  line-height: 1.6;
+  color: var(--text-muted);
+  word-break: keep-all;
+}
+
+.next {
+  composes: primaryButton from '../styles/shared.module.css';
+}
