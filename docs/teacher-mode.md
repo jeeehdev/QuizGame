@@ -1,0 +1,81 @@
+# 선생님 모드 공통 규칙
+
+`.claude/commands/teacher-*.md` 명령이 함께 따르는 규칙입니다. 웹 화면의 선생님 모드(관리자 인증, 문제 교체)는 #39에서 따로 다룹니다.
+
+## 학생 명단: `teacher/roster.json`
+
+게임은 닉네임만 받으므로, 같은 학생이 여러 닉네임을 쓰면 다른 사람으로 보입니다. 명단에서 학생마다 닉네임을 묶어 줍니다.
+
+```json
+{
+  "className": "3학년 2반",
+  "students": [
+    { "number": 1, "name": "김민수", "nicknames": ["민수", "kms01"] },
+    { "number": 2, "name": "이서연", "nicknames": ["서연"] }
+  ]
+}
+```
+
+- `number`: 출석 번호(양의 정수, 중복 불가). 명령에서 학생을 가리킬 때 번호나 이름을 쓴다
+- `nicknames`: 그 학생이 쓰는 닉네임. 한 닉네임은 한 학생에게만 속한다
+- 닉네임 비교는 앞뒤 공백을 지운 뒤 **정확히 같을 때만** 같은 사람으로 본다 (대소문자도 구분). 비슷한 닉네임을 추측해서 묶지 않는다
+- 명단에 없는 닉네임의 기록은 "미등록"으로 따로 보여 주고, 학생 통계에는 넣지 않는다
+- `teacher/` 폴더는 학생 이름이 들어 있어 gitignore 대상이다. 저장소에 올리지 않는다
+- 명단 파일이 없으면 `/teacher-roster init`으로 만들라고 안내하고 멈춘다 (`teacher-roster` 자신은 예외)
+
+## 데이터 읽기
+
+- DB 경로: 환경 변수 `DB_PATH`, 없으면 `server/data/quiz.sqlite`
+- **읽기 전용으로만 연다**: `better-sqlite3`로 `new Database(path, { readonly: true, fileMustExist: true })`. `openDb`는 테이블을 만들므로 쓰지 않는다. 일회용 스크립트는 scratchpad에 만들어 `node`로 실행한다
+- 선생님 모드 명령은 DB를 절대 바꾸지 않는다. 기록 삭제는 `/quiz-leaderboard delete`로 한다
+
+| 데이터 | 테이블 | 보관 기간 | 쓰는 곳 |
+| --- | --- | --- | --- |
+| 점수, 카테고리별 맞힌 수, 소요 시간, 플레이 시각 | `scores` | 계속 | 성적표, 비교, 추이 |
+| 문제별 답안(맞았는지) | `games.answers` (`games.score_id`로 `scores.id`와 연결) | 시작 후 24시간 | 문제별 약점 |
+| 중간에 나간 게임 | `games` (`finished = 0`) | 시작 후 24시간 | 참여 현황 |
+
+```sql
+-- 기간 안의 완료 기록
+SELECT id, nickname, score, correct_by_category, duration_sec, played_at
+FROM scores WHERE played_at >= ? AND played_at < ? ORDER BY played_at;
+
+-- 최근 24시간 완료 게임의 문제별 답안
+SELECT g.score_id, g.nickname, g.answers FROM games g WHERE g.finished = 1 AND g.score_id IS NOT NULL;
+```
+
+- `correct_by_category`는 JSON(`{"history":2,"science":3,"geography":4,"arts":3}`), 카테고리마다 10문제, 점수는 맞힌 수 × 10 (400점 만점)
+- `answers`는 JSON 배열(`questionId`, `correct`). 문제 내용은 `server/data/questions.json`과 `question-candidates.json`에서 id로 찾는다
+- 카테고리 이름: history 한국사, science 과학, geography 지리, arts 예술과 문화
+
+## 기간 인자
+
+모든 명령이 같은 형식을 받는다. 비어 있으면 `all`.
+
+- `all`: 전체, `today`: 오늘, `7d`·`30d`: 최근 N일, `2026-10-01~2026-10-14`: 날짜 범위(양 끝 포함)
+- 날짜는 로컬 시간 기준으로 자르고, `played_at`(UTC ISO 문자열)과 비교할 때 UTC로 바꾼다
+- 그 밖의 값이면 계산하지 말고 쓸 수 있는 형식을 보여 준다
+
+## 학생 한 명의 대표 값
+
+학생이 기간 안에 여러 번 플레이했을 수 있으므로 값을 이렇게 정한다.
+
+- **최고 점수**: 가장 높은 점수(같으면 더 빠른 기록)
+- **평균 점수**: 모든 완료 기록의 평균
+- **최근 점수**: 가장 최근 기록
+- **카테고리별 정답률**: 모든 완료 기록의 카테고리별 맞힌 수 합 ÷ (기록 수 × 10)
+- 기록이 없는 학생은 "미응시"로 표시한다
+- **반 평균**은 응시한 학생들의 평균 점수의 평균, **표준편차**는 같은 값들의 모집단 표준편차다
+
+## 데이터가 적거나 없을 때
+
+- 기간 안에 명단 학생의 기록이 0건이면 평균·순위·비교를 계산하지 않고 "기간 안에 응시 기록이 없습니다"라고만 쓴다 (`NaN`, `Infinity` 같은 값을 그대로 보여 주지 않는다)
+- 응시한 학생이 3명 미만이면 ⚠️·⭐ 표시와 표준편차를 쓰지 않는다 (학생이 적으면 표준편차가 0에 가까워 모두 표시된다)
+- 정답률이 같은 카테고리가 여럿이면 "강한/약한 카테고리"에 모두 쓰고, 네 카테고리가 모두 같으면 "차이 없음"으로 쓴다
+
+## 출력 공통
+
+- 학생은 `번호 이름` 순으로 보여 준다. 표 맨 위에 반 이름, 기간, 대상 학생 수, 기록 수를 적는다
+- 시간은 로컬 시간, 소요 시간은 분:초, 비율은 소수점 없이 %
+- 숫자만 나열하지 말고, 표 아래에 선생님이 알아야 할 점을 2~3줄로 정리한다
+- 화면 출력만 한다. 파일로 저장하는 것은 `/teacher-mode`(통합 명령)뿐이다

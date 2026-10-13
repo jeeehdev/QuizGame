@@ -32,3 +32,6 @@ CLAUDE.local.md
 
 # Local data backups (/quiz-daily)
 backups/
+
+# Teacher mode roster and reports (student names)
+teacher/

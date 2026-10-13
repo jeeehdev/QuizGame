@@ -40,6 +40,13 @@
 5. 검토용 명령: `/quiz-validate [카테고리]`(최상급 표현), `/quiz-range <시작> <끝>`(난이도·정답 분포), `/quiz-check [카테고리]`(정답 정확성), `/quiz-daily [개수]`(점검·후보 추가·검증·백업)
 6. 운영 명령: `/quiz-stats [기간]`(게임 통계), `/quiz-leaderboard [show|find|check|delete]`(순위표 관리). DB는 읽기 전용으로 열고, 삭제는 `npm run delete-score`로만 한다
 
+## 선생님 모드 (Claude Code 명령)
+
+- 공통 규칙(학생 명단 형식, 읽는 데이터, 기간 인자, 대표 값)은 `docs/teacher-mode.md`
+- 학생 명단 `teacher/roster.json`과 보고서 `teacher/reports/`는 학생 이름이 들어 있어 gitignore 대상이다
+- `/teacher-mode [기간] [save]`가 `teacher-roster` → `teacher-scores` → `teacher-weakness` → `teacher-progress` → `teacher-compare`를 차례로 실행해 보고서를 만든다
+- 웹 화면 선생님 모드(관리자 인증, 문제 교체)는 #39
+
 ## 커밋
 
 - 메시지는 영어로 쓴다. 제목 한 줄, 본문은 `- ` 목록으로 바뀐 내용을 정리한다
