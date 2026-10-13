@@ -11,7 +11,7 @@ const CATEGORIES = [
   ['arts', '예술과 문화'],
 ]
 const DIFFICULTY = { easy: '쉬움', medium: '보통', hard: '어려움' }
-const cell = (text) => String(text).replaceAll('|', '\|').replaceAll('\n', ' ')
+const cell = (text) => String(text).replaceAll('|', '\\|').replaceAll('\n', ' ')
 
 const lines = [
   '# 문제 검수표',

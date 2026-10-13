@@ -7,6 +7,7 @@
 
 .title {
   margin: 0;
+  border-radius: 4px;
   font-size: 1.25rem;
   text-align: center;
   word-break: keep-all;
@@ -71,17 +72,46 @@
 }
 
 .categories li {
-  display: flex;
-  justify-content: space-between;
-  padding: 12px 4px;
-  border-bottom: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 6.5em 1fr 3em;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px;
 }
 
-.categories strong {
+.categoryName {
+  font-size: 0.9375rem;
+}
+
+.bar {
+  height: 12px;
+  border-radius: 999px;
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.barFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+}
+
+.categoryScore {
+  text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
 .restart {
   composes: primaryButton from '../styles/shared.module.css';
   margin-top: 16px;
+}
+
+.title:focus {
+  outline: none;
+}
+
+.title:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
 }

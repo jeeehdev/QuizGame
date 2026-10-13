@@ -13,7 +13,7 @@
   border-radius: 16px 16px 0 0;
   background: var(--bg);
   box-shadow: 0 -8px 24px rgb(0 0 0 / 0.15);
-  animation: slideUp 180ms ease-out;
+  animation: slideUp 200ms ease-out;
 }
 
 @keyframes slideUp {
@@ -80,4 +80,10 @@
 
 .next {
   composes: primaryButton from '../styles/shared.module.css';
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet {
+    animation: none;
+  }
 }

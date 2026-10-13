@@ -1,0 +1,10 @@
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.button {
+  composes: secondaryButton from '../styles/shared.module.css';
+  font-size: 0.875rem;
+}

@@ -2,7 +2,16 @@ import { describe, expect, it } from 'vitest'
 import rawQuestions from '../data/questions.json'
 import { loadQuestions } from '../data/validateQuestions'
 import { CATEGORIES, type GameState, type Question } from '../types/quiz'
-import { answerQuestion, createGame, getResult, nextQuestion, shuffleChoices } from './game'
+import {
+  answerQuestion,
+  createGame,
+  endIntro,
+  getResult,
+  getWrongAnswers,
+  isCategoryStart,
+  nextQuestion,
+  shuffleChoices,
+} from './game'
 import { gameReducer, initialAppState } from './reducer'
 import { seededRandom, shuffle } from './shuffle'
 
@@ -13,16 +22,27 @@ const originalAnswer = (q: Question) => {
   return original.choices[original.answerIndex]
 }
 
-/** Plays every question, answering correctly when `pickCorrect(i)` is true. */
-function play(state: GameState, pickCorrect: (index: number) => boolean, msPerQuestion = 1000): GameState {
+/**
+ * Plays every question, answering correctly when `pickCorrect(i)` is true. Each category intro lasts
+ * `introMs` and each question takes `msPerQuestion` from being shown to being answered.
+ */
+function play(state: GameState, pickCorrect: (index: number) => boolean, msPerQuestion = 1000, introMs = 0): GameState {
   let s = state
+  let clock = s.startedAt
   for (let i = 0; i < s.questions.length; i++) {
+    if (s.showingIntro) s = endIntro(s, (clock += introMs))
     const q = s.questions[s.currentIndex]
     const choice = pickCorrect(i) ? q.answerIndex : (q.answerIndex + 1) % 4
-    s = answerQuestion(s, choice, s.startedAt + (i + 1) * msPerQuestion)
-    s = nextQuestion(s)
+    s = answerQuestion(s, choice, (clock += msPerQuestion))
+    s = nextQuestion(s, clock)
   }
   return s
+}
+
+/** Answers the current question (after its intro, if any) and moves on. */
+function step(s: GameState, choiceIndex = 0, at = 0): GameState {
+  if (s.showingIntro) s = endIntro(s, at)
+  return nextQuestion(answerQuestion(s, choiceIndex, at), at)
 }
 
 describe('shuffle', () => {
@@ -98,7 +118,7 @@ describe('shuffleChoices', () => {
 })
 
 describe('answerQuestion', () => {
-  const fresh = () => createGame(questions, 'a', { random: seededRandom(11), now: 0 })
+  const fresh = () => endIntro(createGame(questions, 'a', { random: seededRandom(11), now: 0 }), 0)
 
   it('judges the shuffled correct choice as correct and adds 10 points', () => {
     const game = fresh()
@@ -139,12 +159,12 @@ describe('answerQuestion', () => {
 
 describe('nextQuestion', () => {
   it('does not advance before the current question is answered', () => {
-    const game = createGame(questions, 'a', { random: seededRandom(1) })
+    const game = endIntro(createGame(questions, 'a', { random: seededRandom(1) }))
     expect(nextQuestion(game)).toBe(game)
   })
 
   it('advances one question at a time', () => {
-    const game = createGame(questions, 'a', { random: seededRandom(1) })
+    const game = endIntro(createGame(questions, 'a', { random: seededRandom(1) }))
     const next = nextQuestion(answerQuestion(game, 0))
     expect(next.currentIndex).toBe(1)
     expect(next.phase).toBe('playing')
@@ -152,9 +172,10 @@ describe('nextQuestion', () => {
 
   it('moves to the result phase after the 40th question', () => {
     let s = createGame(questions, 'a', { random: seededRandom(1), now: 0 })
-    for (let i = 0; i < 39; i++) s = nextQuestion(answerQuestion(s, 0, i))
+    for (let i = 0; i < 39; i++) s = step(s, 0, i)
     expect(s.currentIndex).toBe(39)
     expect(s.phase).toBe('playing')
+    if (s.showingIntro) s = endIntro(s, 39)
     s = answerQuestion(s, 0, 39)
     expect(s.phase).toBe('playing')
     s = nextQuestion(s)
@@ -207,8 +228,9 @@ describe('gameReducer', () => {
     let s = gameReducer(initialAppState, { type: 'start', game })
     expect(s.phase).toBe('playing')
     for (let i = 0; i < 40; i++) {
+      if (s.phase === 'playing' && s.showingIntro) s = gameReducer(s, { type: 'endIntro', at: i * 1000 })
       s = gameReducer(s, { type: 'answer', choiceIndex: 0, at: i * 1000 })
-      s = gameReducer(s, { type: 'next' })
+      s = gameReducer(s, { type: 'next', at: i * 1000 })
     }
     expect(s.phase).toBe('result')
     s = gameReducer(s, { type: 'restart' })
@@ -217,7 +239,94 @@ describe('gameReducer', () => {
 
   it('ignores actions that do not fit the current phase', () => {
     expect(gameReducer(initialAppState, { type: 'answer', choiceIndex: 0, at: 0 })).toBe(initialAppState)
-    expect(gameReducer(initialAppState, { type: 'next' })).toBe(initialAppState)
+    expect(gameReducer(initialAppState, { type: 'next', at: 0 })).toBe(initialAppState)
+    expect(gameReducer(initialAppState, { type: 'quit' })).toBe(initialAppState)
+    expect(gameReducer(initialAppState, { type: 'endIntro', at: 0 })).toBe(initialAppState)
     expect(gameReducer(initialAppState, { type: 'restart' })).toBe(initialAppState)
+  })
+})
+
+describe('category intro', () => {
+  it('marks question 1, 11, 21 and 31 as category starts', () => {
+    const game = createGame(questions, 'a', { random: seededRandom(6) })
+    const starts = game.questions.map((_, i) => i).filter((i) => isCategoryStart(game.questions, i))
+    expect(starts).toEqual([0, 10, 20, 30])
+  })
+
+  it('shows an intro before the first question and blocks answering until it ends', () => {
+    const game = createGame(questions, 'a', { random: seededRandom(6), now: 0 })
+    expect(game.showingIntro).toBe(true)
+    expect(answerQuestion(game, 0, 100)).toBe(game)
+    const shown = endIntro(game, 1000)
+    expect(shown.showingIntro).toBe(false)
+    expect(answerQuestion(shown, 0, 1500).answers).toHaveLength(1)
+  })
+
+  it('shows an intro only when the next question opens a new category', () => {
+    let s = createGame(questions, 'a', { random: seededRandom(6), now: 0 })
+    const introAt: number[] = []
+    for (let i = 0; i < 40; i++) {
+      if (s.showingIntro) {
+        introAt.push(s.currentIndex)
+        s = endIntro(s, i)
+      }
+      s = nextQuestion(answerQuestion(s, 0, i), i)
+    }
+    expect(introAt).toEqual([0, 10, 20, 30])
+  })
+
+  it('excludes intro time from the duration', () => {
+    // 4 intros × 1s are excluded; 40 questions × 2s = 80s remain.
+    const s = play(createGame(questions, 'a', { random: seededRandom(2), now: 5_000 }), () => true, 2000, 1000)
+    expect(getResult(s).durationSec).toBe(80)
+  })
+
+  it('ignores endIntro when no intro is showing', () => {
+    const shown = endIntro(createGame(questions, 'a', { now: 0 }), 1000)
+    expect(endIntro(shown, 5000)).toBe(shown)
+  })
+})
+
+describe('getWrongAnswers', () => {
+  it('lists only the wrong answers, in order, with my answer, the correct answer and the explanation', () => {
+    const wrongAt = new Set([2, 15, 39])
+    const s = play(createGame(questions, 'a', { random: seededRandom(12), now: 0 }), (i) => !wrongAt.has(i))
+    const wrong = getWrongAnswers(s)
+    expect(wrong.map((w) => w.questionId)).toEqual([2, 15, 39].map((i) => s.questions[i].id))
+    for (const [n, i] of [2, 15, 39].entries()) {
+      const q = s.questions[i]
+      expect(wrong[n]).toEqual({
+        questionId: q.id,
+        category: q.category,
+        question: q.question,
+        chosen: q.choices[s.answers[i].choiceIndex],
+        correctChoice: originalAnswer(q),
+        explanation: q.explanation,
+      })
+      expect(wrong[n].chosen).not.toBe(wrong[n].correctChoice)
+    }
+  })
+
+  it('is empty for a perfect game', () => {
+    const s = play(createGame(questions, 'a', { random: seededRandom(12), now: 0 }), () => true)
+    expect(getWrongAnswers(s)).toEqual([])
+  })
+
+  it('matches the per-question records in the result', () => {
+    const s = play(createGame(questions, 'a', { random: seededRandom(3), now: 0 }), (i) => i % 3 === 0)
+    const { records } = getResult(s)
+    expect(records).toHaveLength(40)
+    expect(records.map((r) => r.questionId)).toEqual(s.questions.map((q) => q.id))
+    expect(records.filter((r) => !r.correct)).toHaveLength(getWrongAnswers(s).length)
+  })
+})
+
+describe('quitting', () => {
+  it('discards the game and returns to the start screen with the nickname', () => {
+    const game = endIntro(createGame(questions, '그만', { now: 0 }), 0)
+    let s = gameReducer(initialAppState, { type: 'start', game })
+    s = gameReducer(s, { type: 'answer', choiceIndex: 0, at: 10 })
+    s = gameReducer(s, { type: 'quit' })
+    expect(s).toEqual({ phase: 'start', nickname: '그만' })
   })
 })

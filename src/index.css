@@ -11,7 +11,7 @@
   --primary-hover: #2f40b8;
   --primary-soft: #e8ebfc;
   --on-primary: #ffffff;
-  --focus: #f0a500;
+  --focus: #b45309;
   --correct: #1e8a44;
   --correct-soft: #e5f5ea;
   --correct-text: #146032;
@@ -36,7 +36,20 @@
 }
 
 body {
-  min-width: 360px;
   margin: 0;
   background: var(--bg);
+}
+
+::placeholder {
+  color: var(--text-muted);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

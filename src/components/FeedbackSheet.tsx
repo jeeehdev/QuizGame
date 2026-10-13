@@ -1,3 +1,4 @@
+import type { Ref } from 'react'
 import styles from './FeedbackSheet.module.css'
 
 interface Props {
@@ -6,11 +7,12 @@ interface Props {
   explanation: string
   isLast: boolean
   onNext: () => void
+  ref?: Ref<HTMLElement>
 }
 
-export function FeedbackSheet({ correct, correctChoice, explanation, isLast, onNext }: Props) {
+export function FeedbackSheet({ correct, correctChoice, explanation, isLast, onNext, ref }: Props) {
   return (
-    <section className={`${styles.sheet} ${correct ? styles.correct : styles.wrong}`} aria-live="polite">
+    <section ref={ref} className={`${styles.sheet} ${correct ? styles.correct : styles.wrong}`}>
       <p className={styles.verdict}>
         <span className={styles.icon} aria-hidden="true">
           {correct ? '✓' : '✗'}

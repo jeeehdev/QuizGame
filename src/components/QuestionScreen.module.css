@@ -1,13 +1,8 @@
 .screen {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  padding: 16px 20px 32px;
-}
-
-/* Leave room so the feedback sheet never hides the choices. */
-.withSheet {
-  padding-bottom: 300px;
+  gap: 16px;
+  padding: 12px 20px 32px;
 }
 
 .header {
@@ -61,6 +56,16 @@
   font-size: 1.25rem;
   line-height: 1.5;
   word-break: keep-all;
+  border-radius: 4px;
+}
+
+.question:focus {
+  outline: none;
+}
+
+.question:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
 }
 
 .choices {
@@ -136,5 +141,10 @@
 }
 
 .dimmed {
-  opacity: 0.55;
+  border-color: var(--surface);
+  color: var(--text-muted);
+}
+
+.srOnly {
+  composes: srOnly from '../styles/shared.module.css';
 }

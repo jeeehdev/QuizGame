@@ -1,0 +1,99 @@
+.note {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.title {
+  margin: 8px 0 0;
+  font-size: 1rem;
+}
+
+.count {
+  margin-left: 4px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.empty {
+  margin: 0;
+  padding: 16px;
+  border-radius: var(--radius);
+  background: var(--correct-soft);
+  color: var(--correct-text);
+  font-weight: 700;
+  text-align: center;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.category {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: var(--primary);
+}
+
+.question {
+  margin: 0;
+  font-weight: 700;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+.answers {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+}
+
+.answers div {
+  display: flex;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+.answers dt {
+  flex: none;
+  font-weight: 700;
+}
+
+.answers dd {
+  margin: 0;
+}
+
+.mine {
+  background: var(--wrong-soft);
+  color: var(--wrong-text);
+}
+
+.correct {
+  background: var(--correct-soft);
+  color: var(--correct-text);
+}
+
+.explanation {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--text-muted);
+  word-break: keep-all;
+}

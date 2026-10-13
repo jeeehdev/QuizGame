@@ -36,6 +36,11 @@ export interface GameState {
   score: number
   startedAt: number
   finishedAt: number | null
+  /** True while the 1-second category intro is shown; answering is blocked. */
+  showingIntro: boolean
+  introStartedAt: number | null
+  /** Total time spent on category intros, excluded from the duration. */
+  pausedMs: number
 }
 
 export type AppState = { phase: 'start'; nickname: string } | GameState
@@ -48,4 +53,15 @@ export interface GameResult {
   correctByCategory: Record<Category, number>
   totalByCategory: Record<Category, number>
   durationSec: number
+  /** One record per question, in the order asked. */
+  records: AnswerRecord[]
+}
+
+export interface WrongAnswer {
+  questionId: string
+  category: Category
+  question: string
+  chosen: string
+  correctChoice: string
+  explanation: string
 }

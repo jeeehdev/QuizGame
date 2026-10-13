@@ -1,0 +1,41 @@
+.screen {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  padding: 20px;
+}
+
+.card {
+  text-align: center;
+  animation: popIn 250ms ease-out;
+}
+
+@keyframes popIn {
+  from {
+    transform: scale(0.96);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card {
+    animation: none;
+  }
+}
+
+.step {
+  margin: 0 0 8px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.75rem;
+  color: var(--primary);
+  word-break: keep-all;
+}
+
+.srOnly {
+  composes: srOnly from '../styles/shared.module.css';
+}
