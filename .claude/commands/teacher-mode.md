@@ -1,13 +1,14 @@
 ---
 description: 선생님 모드 통합 실행 - 명단 점검부터 성적표·비교·약점·추이까지 한 번에 보고서로
-argument-hint: "[기간: all | today | 7d | 30d | YYYY-MM-DD~YYYY-MM-DD] [save]"
+argument-hint: "[기간: all | today | 7d | 30d | YYYY-MM-DD~YYYY-MM-DD] [save] [csv | pdf | both]"
 ---
 
 선생님 모드 명령을 순서대로 실행해 반 전체 성적 보고서를 만들어 줘.
 
 인자: $ARGUMENTS
 - 기간 형식인 값은 기간(기본 `all`). `save`가 있으면 보고서를 파일로도 저장한다
-- 그 밖의 값이면 시작하지 말고 사용법(`/teacher-mode 7d save`)을 보여 준다
+- `csv`, `pdf`, `both`가 있으면 저장한 보고서를 그 형식으로도 내보낸다. 이때는 `save`가 없어도 저장한다
+- 그 밖의 값이면 시작하지 말고 사용법(`/teacher-mode 7d save`, `/teacher-mode 7d pdf`)을 보여 준다
 
 각 단계는 해당 명령 파일(`.claude/commands/<이름>.md`)을 읽고 그 지시를 아래 인자로 그대로 수행한다. 공통 규칙은 `docs/teacher-mode.md`를 따른다. DB는 읽기 전용으로만 열고, 명단과 DB를 바꾸지 않는다.
 
@@ -48,4 +49,6 @@ argument-hint: "[기간: all | today | 7d | 30d | YYYY-MM-DD~YYYY-MM-DD] [save]"
 - 단계별 "정리" 문장은 각 섹션 끝에 그대로 둔다. 같은 내용을 여러 섹션에서 반복하지 않는다
 - 화면에 보고서 전체를 보여 준다
 - `save`가 있으면 `teacher/reports/<YYYY-MM-DD-HHmm>-<기간>.md`로 저장하고 경로를 알린다. 같은 이름이 있으면 덮어쓰지 않고 뒤에 `-2`를 붙인다
-- 마지막에 실행한 단계 목록(완료 / 데이터 없음 / 건너뜀)을 표로 적는다
+- `csv`·`pdf`·`both`가 있으면 저장한 뒤 `.claude/commands/export-report.md`를 읽고 그 지시를 `<형식> <방금 저장한 .md 경로>`로 수행한다. 내보내기가 실패해도 저장한 보고서는 그대로 두고, 실패 내용을 단계 목록에 적는다
+- 내보내지 않았으면 마지막에 `/export-report pdf`처럼 나중에 내보낼 수 있다고 한 줄 안내한다
+- 마지막에 실행한 단계 목록(완료 / 데이터 없음 / 건너뜀)을 표로 적는다. 내보냈으면 "8. 내보내기" 줄과 만든 파일 경로를 함께 적는다

@@ -106,4 +106,4 @@ SELECT g.score_id, g.nickname, g.answers FROM games g WHERE g.finished = 1 AND g
 - 학생은 `번호 이름` 순으로 보여 준다. 표 맨 위에 반 이름, 기간, 대상 학생 수, 기록 수를 적는다
 - 시간은 로컬 시간, 소요 시간은 분:초, 비율은 소수점 없이 %
 - 숫자만 나열하지 말고, 표 아래에 선생님이 알아야 할 점을 2~3줄로 정리한다
-- 화면 출력만 한다. 파일로 저장하는 것은 `/teacher-mode`(통합 명령)뿐이다
+- 화면 출력만 한다. 파일을 만드는 것은 `/teacher-mode`(보고서 .md 저장)와 `/export-report`(CSV·PDF)뿐이고, 둘 다 `teacher/reports/`에만 쓴다

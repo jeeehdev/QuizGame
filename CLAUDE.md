@@ -45,7 +45,8 @@
 
 - 공통 규칙(학생 명단 형식, 읽는 데이터, 기간 인자, 대표 값)은 `docs/teacher-mode.md`
 - 학생 명단 `teacher/roster.json`과 보고서 `teacher/reports/`는 학생 이름이 들어 있어 gitignore 대상이다
-- `/teacher-mode [기간] [save]`가 `teacher-roster` → `teacher-scores` → `teacher-weakness` → `teacher-progress` → `teacher-compare`를 차례로 실행해 보고서를 만든다
+- `/teacher-mode [기간] [save] [csv|pdf|both]`가 `teacher-roster` → `teacher-scores` → `teacher-weakness` → `teacher-progress` → `teacher-compare`를 차례로 실행해 보고서를 만들고, 형식을 주면 `/export-report`로 내보낸다
+- `/export-report [csv|pdf|both] [보고서.md]`: 저장된 보고서를 CSV(성적표, Excel용 BOM)와 PDF(헤드리스 Chrome/Edge 인쇄)로 내보낸다
 - 웹 화면 선생님 모드(관리자 인증, 문제 교체)는 #39
 
 ## 커밋
