@@ -15,7 +15,8 @@
     "test:watch": "vitest",
     "review-doc": "node scripts/generate-review.mjs",
     "sounds": "node scripts/generate-sounds.mjs",
-    "delete-score": "node server/src/scripts/delete-score.ts"
+    "delete-score": "node server/src/scripts/delete-score.ts",
+    "swap-question": "node server/src/scripts/swap-question.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",

@@ -10,14 +10,16 @@
 - `npm run build`: 타입 검사 → Vite 빌드 → `scripts/check-bundle.mjs`(클라이언트 번들에 문제 데이터가 새어 나가면 빌드 실패)
 - `npm start`: 빌드된 `dist/`와 API를 한 서버로 제공
 - `npm run lint`: oxlint
-- `npm run review-doc`: `server/data/questions.json`에서 `docs/questions-review.md`를 다시 만든다
+- `npm run review-doc`: `server/data/questions.json`과 `question-candidates.json`에서 `docs/questions-review.md`를 다시 만든다
 - `npm run delete-score -- <id>`: 순위표 기록 하나 삭제
+- `npm run swap-question -- <출제 id> <후보 id>`: 출제 문제와 같은 카테고리·난이도의 후보 문제를 바꾼다
 
 ## 구조
 
 - `server/`: Express + better-sqlite3. 문제, 섞기, 정답 판정, 점수, 소요 시간은 모두 서버가 한다
-  - `server/data/questions.json`: 문제 원본. `banned-words.txt`는 닉네임 금칙어. `quiz.sqlite*`는 gitignore 대상
-  - `server/src/game/`: 순수 게임 로직과 문제 검증(`validateQuestions`)
+  - `server/data/questions.json`: 출제 문제 40개. `question-candidates.json`은 출제되지 않는 후보 문제. `banned-words.txt`는 닉네임 금칙어. `quiz.sqlite*`는 gitignore 대상
+  - `server/src/game/`: 순수 게임 로직과 문제 검증(`validateQuestions`, `validateCandidates`)
+  - `server/src/questionBank.ts`: 출제 문제와 후보 문제 교체. 나중에 선생님 모드 API도 이 함수를 쓴다
   - `server/test/`: Supertest API 테스트
 - `shared/`: 클라이언트와 서버가 함께 쓰는 API 타입(`types.ts`)과 닉네임 규칙
 - `src/`: React 클라이언트. `src/api/client.ts`로만 서버와 통신하고, 화면 상태는 `src/game/reducer.ts`가 관리한다
@@ -32,8 +34,10 @@
 ## 문제를 추가하거나 고칠 때
 
 1. `docs/question-guidelines.md`의 교차 검증 기준(정답이 하나인지, 최상급 표현의 기준, 시점·범위, 출처 2개 이상)을 따른다
-2. 형식 제한: 문제 80자, 보기 30자, 해설 120자 이내. 카테고리마다 10문제(쉬움 4 · 보통 4 · 어려움 2)
-3. `npm test`로 검증한 뒤 `npm run review-doc`으로 검수표를 다시 만든다. 검수표는 직접 고치지 않는다
+2. 형식 제한: 문제 80자, 보기 30자, 해설 120자 이내. 출제 문제는 카테고리마다 10문제(쉬움 4 · 보통 4 · 어려움 2)로 고정
+3. 새 문제는 `questions.json`에 바로 넣지 않고 `/quiz-add`로 후보 파일에 추가한 뒤, `/quiz-swap`(`npm run swap-question`)으로 같은 카테고리·난이도의 출제 문제와 바꾼다. 교체 후 서버를 재시작해야 반영된다
+4. `npm test`로 검증한 뒤 `npm run review-doc`으로 검수표를 다시 만든다. 검수표는 직접 고치지 않는다
+5. 검토용 명령: `/quiz-validate [카테고리]`(최상급 표현), `/quiz-range <시작> <끝>`(난이도·정답 분포)
 
 ## 커밋
 

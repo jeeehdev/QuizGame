@@ -7,6 +7,8 @@ export const config = {
   port: Number(process.env.PORT ?? 3001),
   dbPath: process.env.DB_PATH ?? fromServer('data/quiz.sqlite'),
   questionsPath: fromServer('data/questions.json'),
+  /** Questions written but not in play; swapped into the bank with npm run swap-question. */
+  candidatesPath: fromServer('data/question-candidates.json'),
   bannedWordsPath: process.env.BANNED_WORDS_PATH ?? fromServer('data/banned-words.txt'),
   /** Built client (vite build output). Served unless the server is started with --api-only. */
   clientDir: fileURLToPath(new URL('../../dist', import.meta.url)),

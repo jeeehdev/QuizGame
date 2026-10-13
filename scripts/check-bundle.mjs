@@ -6,7 +6,11 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 
 const dist = new URL('../dist/', import.meta.url)
-const questions = JSON.parse(readFileSync(new URL('../server/data/questions.json', import.meta.url), 'utf8'))
+const readJson = (path) => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'))
+const questions = [
+  ...readJson('../server/data/questions.json'),
+  ...readJson('../server/data/question-candidates.json'),
+]
 
 function files(dir) {
   return readdirSync(dir).flatMap((name) => {

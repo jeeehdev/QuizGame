@@ -9,7 +9,7 @@ export const MAX_CHOICE_LENGTH = 30
 export const MAX_EXPLANATION_LENGTH = 120
 export const DIFFICULTY_MIX: Record<Difficulty, number> = { easy: 4, medium: 4, hard: 2 }
 
-const ID_PREFIX: Record<Category, string> = { history: 'hist', science: 'sci', geography: 'geo', arts: 'arts' }
+export const ID_PREFIX: Record<Category, string> = { history: 'hist', science: 'sci', geography: 'geo', arts: 'arts' }
 const DIFFICULTIES = Object.keys(DIFFICULTY_MIX) as Difficulty[]
 
 /** Counts characters (code points), so emoji or symbols outside the BMP count as one. */
@@ -17,15 +17,14 @@ export function charLength(text: string): number {
   return [...text].length
 }
 
-/** Returns every problem found in the data; an empty array means the data is valid. */
-export function validateQuestions(data: unknown): string[] {
-  if (!Array.isArray(data)) return ['문제 데이터가 배열이 아닙니다.']
+type Counts = Record<Category, Record<Difficulty | 'total', number>>
 
-  const errors: string[] = []
+/** Checks each question on its own (fields, lengths, id format and uniqueness) and counts them by category. */
+function checkQuestions(data: unknown[], errors: string[]): Counts {
   const seenIds = new Set<string>()
   const counts = Object.fromEntries(
     CATEGORIES.map((c) => [c, { total: 0, easy: 0, medium: 0, hard: 0 }]),
-  ) as Record<Category, Record<Difficulty | 'total', number>>
+  ) as Counts
 
   data.forEach((item: unknown, index) => {
     const q = item as Partial<Question>
@@ -79,6 +78,15 @@ export function validateQuestions(data: unknown): string[] {
     }
   })
 
+  return counts
+}
+
+/** Returns every problem found in the data; an empty array means the data is valid. */
+export function validateQuestions(data: unknown): string[] {
+  if (!Array.isArray(data)) return ['문제 데이터가 배열이 아닙니다.']
+
+  const errors: string[] = []
+  const counts = checkQuestions(data, errors)
   for (const category of CATEGORIES) {
     const count = counts[category]
     if (count.total !== QUESTIONS_PER_CATEGORY) {
@@ -93,6 +101,22 @@ export function validateQuestions(data: unknown): string[] {
     }
   }
 
+  return errors
+}
+
+/**
+ * Validates the candidate pool (server/data/question-candidates.json): the same per-question rules as the
+ * question bank, without the per-category counts, and no id may also be used by a question in the bank.
+ */
+export function validateCandidates(data: unknown, bank: readonly Question[]): string[] {
+  if (!Array.isArray(data)) return ['후보 문제 데이터가 배열이 아닙니다.']
+
+  const errors: string[] = []
+  checkQuestions(data, errors)
+  const bankIds = new Set(bank.map((q) => q.id))
+  for (const item of data as Partial<Question>[]) {
+    if (typeof item?.id === 'string' && bankIds.has(item.id)) errors.push(`${item.id}: 출제 문제와 id가 겹칩니다.`)
+  }
   return errors
 }
 

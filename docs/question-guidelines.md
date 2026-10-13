@@ -26,6 +26,9 @@
 
 ## 문제를 추가하는 순서
 
-1. `server/data/questions.json`에 문제를 작성하고 위 4가지를 확인한다
-2. `npm test`로 형식 검증(`validateQuestions`)을 통과시킨다
+출제 문제(`server/data/questions.json`)는 카테고리마다 10문제(쉬움 4 · 보통 4 · 어려움 2)로 고정이므로, 새 문제는 후보 파일에 먼저 넣고 기존 문제와 바꾼다.
+
+1. `server/data/question-candidates.json`에 문제를 작성하고 위 4가지를 확인한다 (Claude Code에서는 `/quiz-add <카테고리> <난이도>`)
+2. `npm test`로 형식 검증을 통과시킨다
 3. `npm run review-doc`으로 검수표를 다시 만들고, 사람이 출처를 확인한 뒤 검수 칸에 ✅ 또는 메모를 남긴다
+4. 출제하려면 `npm run swap-question -- <출제 문제 id> <후보 id>`로 카테고리와 난이도가 같은 출제 문제와 바꾸고 서버를 재시작한다 (Claude Code에서는 `/quiz-swap`). 빠진 문제는 후보 파일로 옮겨져 다시 쓸 수 있다
