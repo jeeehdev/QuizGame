@@ -3,14 +3,16 @@ description: 카테고리와 난이도를 받아 새 퀴즈 문제를 후보 파
 argument-hint: "<카테고리: history | science | geography | arts> <난이도: easy | medium | hard>"
 ---
 
-카테고리 $1, 난이도 $2인 새 퀴즈 문제를 하나 만들어 `server/data/question-candidates.json`(후보 문제)에 추가해 줘.
+인자: $ARGUMENTS
+
+첫 번째 값을 카테고리, 두 번째 값을 난이도로 해서 새 퀴즈 문제를 하나 만들어 `server/data/question-candidates.json`(후보 문제)에 추가해 줘.
 
 후보 문제는 출제되지 않는다. 출제 문제(`server/data/questions.json`)는 카테고리마다 10문제(쉬움 4 · 보통 4 · 어려움 2)로 고정이라 직접 추가하지 않는다. 출제하려면 `/quiz-swap`으로 같은 카테고리·난이도의 출제 문제와 바꾼다.
 
 ## 1. 인자 확인
 
-- 카테고리($1): `history`, `science`, `geography`, `arts`. 한글도 받는다: 한국사 → `history`, 과학 → `science`, 지리 → `geography`, 예술과 문화·예술 → `arts`
-- 난이도($2): `easy`, `medium`, `hard`. 한글도 받는다: 쉬움 → `easy`, 보통 → `medium`, 어려움 → `hard`
+- 카테고리(첫 번째 값): `history`, `science`, `geography`, `arts`. 한글도 받는다: 한국사 → `history`, 과학 → `science`, 지리 → `geography`, 예술과 문화·예술 → `arts`
+- 난이도(두 번째 값): `easy`, `medium`, `hard`. 한글도 받는다: 쉬움 → `easy`, 보통 → `medium`, 어려움 → `hard`
 - 둘 중 하나라도 비어 있거나 위 값이 아니면 문제를 만들지 말고 사용법(`/quiz-add geography medium`)을 보여 준다
 
 ## 2. 기존 문제 파악

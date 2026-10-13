@@ -3,11 +3,13 @@ description: 출제 문제와 같은 카테고리·난이도의 후보 문제를
 argument-hint: "<출제 문제 id> <후보 문제 id> (예: geo-04 geo-11)"
 ---
 
-출제 문제 $1과 후보 문제 $2를 서로 바꿔 줘. $1은 `server/data/question-candidates.json`으로, $2는 `server/data/questions.json`의 $1 자리로 옮긴다.
+인자: $ARGUMENTS
+
+첫 번째 값은 출제 문제 id, 두 번째 값은 후보 문제 id다. 두 문제를 서로 바꿔 줘. 출제 문제는 `server/data/question-candidates.json`으로, 후보 문제는 `server/data/questions.json`의 그 출제 문제 자리로 옮긴다.
 
 ## 1. 인자 확인
 
-- $1이나 $2가 비어 있으면 바꾸지 말고 다음을 보여 준다
+- 출제 문제 id나 후보 문제 id가 비어 있으면 바꾸지 말고 다음을 보여 준다
   - 후보 문제 목록: id, 카테고리, 난이도, 문제
   - 후보마다 바꿀 수 있는 출제 문제(같은 카테고리·난이도) id
   - 사용법: `/quiz-swap geo-04 geo-11`
@@ -19,7 +21,7 @@ argument-hint: "<출제 문제 id> <후보 문제 id> (예: geo-04 geo-11)"
 
 ## 3. 바꾸기
 
-- `npm run swap-question -- $1 $2`를 실행한다. 파일을 직접 고치지 않는다
+- `npm run swap-question -- <출제 문제 id> <후보 문제 id>`를 실행한다. 파일을 직접 고치지 않는다
   - 이 명령은 카테고리·난이도가 다르거나, id가 없거나, 바꾼 결과가 검증을 통과하지 못하면 파일을 바꾸지 않고 오류를 낸다. 오류가 나면 내용을 그대로 보여 주고 멈춘다
 - 성공하면 `npm test`와 `npm run review-doc`을 실행한다
 
