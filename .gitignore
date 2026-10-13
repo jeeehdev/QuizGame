@@ -29,3 +29,6 @@ server/data/*.sqlite*
 # Personal Claude Code settings
 .claude/settings.local.json
 CLAUDE.local.md
+
+# Local data backups (/quiz-daily)
+backups/

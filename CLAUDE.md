@@ -37,7 +37,8 @@
 2. 형식 제한: 문제 80자, 보기 30자, 해설 120자 이내. 출제 문제는 카테고리마다 10문제(쉬움 4 · 보통 4 · 어려움 2)로 고정
 3. 새 문제는 `questions.json`에 바로 넣지 않고 `/quiz-add`로 후보 파일에 추가한 뒤, `/quiz-swap`(`npm run swap-question`)으로 같은 카테고리·난이도의 출제 문제와 바꾼다. 교체 후 서버를 재시작해야 반영된다
 4. `npm test`로 검증한 뒤 `npm run review-doc`으로 검수표를 다시 만든다. 검수표는 직접 고치지 않는다
-5. 검토용 명령: `/quiz-validate [카테고리]`(최상급 표현), `/quiz-range <시작> <끝>`(난이도·정답 분포)
+5. 검토용 명령: `/quiz-validate [카테고리]`(최상급 표현), `/quiz-range <시작> <끝>`(난이도·정답 분포), `/quiz-check [카테고리]`(정답 정확성), `/quiz-daily [개수]`(점검·후보 추가·검증·백업)
+6. 운영 명령: `/quiz-stats [기간]`(게임 통계), `/quiz-leaderboard [show|find|check|delete]`(순위표 관리). DB는 읽기 전용으로 열고, 삭제는 `npm run delete-score`로만 한다
 
 ## 커밋
 
