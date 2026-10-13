@@ -13,6 +13,7 @@
 - `npm run review-doc`: `server/data/questions.json`과 `question-candidates.json`에서 `docs/questions-review.md`를 다시 만든다
 - `npm run delete-score -- <id>`: 순위표 기록 하나 삭제
 - `npm run swap-question -- <출제 id> <후보 id>`: 출제 문제와 같은 카테고리·난이도의 후보 문제를 바꾼다
+- `npm run teacher-fixture -- <새 DB 경로>`: 선생님 모드 명령을 테스트할 DB와 명단을 만든다 (실제 DB 경로는 거부). 명령은 `DB_PATH=<그 경로>`로 실행한다
 
 ## 구조
 

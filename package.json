@@ -16,7 +16,8 @@
     "review-doc": "node scripts/generate-review.mjs",
     "sounds": "node scripts/generate-sounds.mjs",
     "delete-score": "node server/src/scripts/delete-score.ts",
-    "swap-question": "node server/src/scripts/swap-question.ts"
+    "swap-question": "node server/src/scripts/swap-question.ts",
+    "teacher-fixture": "node server/src/scripts/teacher-fixture.ts"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
