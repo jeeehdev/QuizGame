@@ -1,8 +1,8 @@
-// Regenerates docs/questions-review.md from src/data/questions.json.
+// Regenerates docs/questions-review.md from server/data/questions.json.
 // Usage: npm run review-doc
 import { readFileSync, writeFileSync } from 'node:fs'
 
-const questions = JSON.parse(readFileSync(new URL('../src/data/questions.json', import.meta.url), 'utf8'))
+const questions = JSON.parse(readFileSync(new URL('../server/data/questions.json', import.meta.url), 'utf8'))
 
 const CATEGORIES = [
   ['history', '한국사'],
@@ -16,7 +16,7 @@ const cell = (text) => String(text).replaceAll('|', '\\|').replaceAll('\n', ' ')
 const lines = [
   '# 문제 검수표',
   '',
-  '> 이 파일은 `npm run review-doc`으로 `src/data/questions.json`에서 생성됩니다. 문제를 고칠 때는 JSON을 수정한 뒤 다시 생성하세요.',
+  '> 이 파일은 `npm run review-doc`으로 `server/data/questions.json`에서 생성됩니다. 문제를 고칠 때는 JSON을 수정한 뒤 다시 생성하세요.',
   '',
   '검수 방법: 각 문제의 정답과 해설을 백과사전 등 출처로 확인하고, 문제가 없으면 마지막 칸에 ✅, 고칠 점이 있으면 메모를 남깁니다.',
   '',

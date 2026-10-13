@@ -148,3 +148,14 @@
 .srOnly {
   composes: srOnly from '../styles/shared.module.css';
 }
+
+/* Chosen and waiting for the server's verdict. */
+.pending {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--text);
+}
+
+.choice:disabled:not(.correct, .wrong, .dimmed, .pending) {
+  color: var(--text-muted);
+}

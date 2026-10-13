@@ -1,0 +1,22 @@
+.box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--wrong);
+  border-radius: var(--radius);
+  background: var(--wrong-soft);
+}
+
+.message {
+  margin: 0;
+  color: var(--wrong-text);
+  font-weight: 600;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+.retry {
+  composes: primaryButton from '../styles/shared.module.css';
+  min-height: 48px;
+}

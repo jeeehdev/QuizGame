@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import type { Question } from '../types/quiz'
-import rawQuestions from './questions.json'
-import { loadQuestions, validateQuestions } from './validateQuestions'
+import { readFileSync } from 'node:fs'
+import type { Question } from './types.ts'
+import { loadQuestions, validateQuestions } from './validateQuestions.ts'
+
+const rawQuestions = JSON.parse(
+  readFileSync(new URL('../../data/questions.json', import.meta.url), 'utf8'),
+) as Question[]
 
 const clone = (): Question[] => structuredClone(rawQuestions) as Question[]
 

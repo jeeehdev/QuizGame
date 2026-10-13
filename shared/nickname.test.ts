@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { validateNickname } from './nickname'
+import { validateNickname } from './nickname.ts'
 
 describe('validateNickname', () => {
   it.each(['홍길', 'abc', 'Player1', '퀴즈왕2026', '가나다라마바사아자차'])('accepts %s', (name) => {

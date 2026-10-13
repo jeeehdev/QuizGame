@@ -83,3 +83,13 @@
 .start {
   composes: primaryButton from '../styles/shared.module.css';
 }
+
+.start:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.leaderboard {
+  composes: secondaryButton from '../styles/shared.module.css';
+  min-height: 48px;
+}

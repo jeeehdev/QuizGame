@@ -1,22 +1,30 @@
 import { useState, type FormEvent } from 'react'
-import { validateNickname, NICKNAME_MAX, NICKNAME_MIN } from '../game/nickname'
+import { NICKNAME_MAX, NICKNAME_MIN, validateNickname } from '../../shared/nickname.ts'
 import styles from './StartScreen.module.css'
 
 interface Props {
   initialNickname: string
+  /** True while the game is being created on the server. */
+  starting: boolean
+  /** Error from the server (e.g. a banned word or a network failure). */
+  serverError: string | null
   onStart: (nickname: string) => void
+  onShowLeaderboard: () => void
 }
 
-export function StartScreen({ initialNickname, onStart }: Props) {
+export function StartScreen({ initialNickname, starting, serverError, onStart, onShowLeaderboard }: Props) {
   const [nickname, setNickname] = useState(initialNickname)
   const [submitted, setSubmitted] = useState(false)
+  // A server error belongs to the nickname it was about; editing the field clears it.
+  const [editedSinceError, setEditedSinceError] = useState(false)
   const error = validateNickname(nickname)
-  const showError = submitted && error !== null
+  const message = submitted && error !== null ? error : !editedSinceError ? serverError : null
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
     setSubmitted(true)
-    if (error === null) onStart(nickname.trim())
+    setEditedSinceError(false)
+    if (error === null && !starting) onStart(nickname.trim())
   }
 
   return (
@@ -43,19 +51,26 @@ export function StartScreen({ initialNickname, onStart }: Props) {
           id="nickname"
           className={styles.input}
           value={nickname}
-          onChange={(e) => setNickname(e.target.value)}
+          onChange={(e) => {
+            setNickname(e.target.value)
+            setEditedSinceError(true)
+          }}
           placeholder={`${NICKNAME_MIN}~${NICKNAME_MAX}자, 한글·영문·숫자`}
           autoComplete="off"
-          aria-invalid={showError}
+          aria-invalid={message !== null}
           aria-describedby="nickname-error"
         />
         <p id="nickname-error" className={styles.error} role="alert">
-          {showError ? error : ''}
+          {message ?? ''}
         </p>
-        <button type="submit" className={styles.start}>
-          시작하기
+        <button type="submit" className={styles.start} disabled={starting} aria-busy={starting}>
+          {starting ? '준비하는 중…' : '시작하기'}
         </button>
       </form>
+
+      <button type="button" className={styles.leaderboard} onClick={onShowLeaderboard} disabled={starting}>
+        순위표 보기
+      </button>
     </main>
   )
 }

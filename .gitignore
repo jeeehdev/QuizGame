@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# SQLite database (server/data/quiz.sqlite and its WAL files)
+server/data/*.sqlite*

@@ -1,0 +1,75 @@
+.status {
+  margin: 0;
+  padding: 16px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text-muted);
+  text-align: center;
+  word-break: keep-all;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.caption {
+  composes: srOnly from '../styles/shared.module.css';
+}
+
+.table th {
+  padding: 8px 6px;
+  border-bottom: 2px solid var(--border);
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.table td {
+  padding: 10px 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.rank {
+  width: 3em;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.nickname {
+  word-break: break-all;
+}
+
+.number {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.table th:nth-child(3),
+.table th:nth-child(4) {
+  text-align: right;
+}
+
+.mine td {
+  background: var(--primary-soft);
+  font-weight: 700;
+}
+
+/* My record shown after the top 10, separated by a gap marker. */
+.separated td {
+  border-top: 2px dashed var(--border);
+}
+
+.badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--primary);
+  color: var(--on-primary);
+  font-size: 0.75rem;
+  vertical-align: middle;
+}

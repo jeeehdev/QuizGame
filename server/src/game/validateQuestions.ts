@@ -1,4 +1,6 @@
-import { CATEGORIES, type Category, type Difficulty, type Question } from '../types/quiz'
+import { readFileSync } from 'node:fs'
+import { CATEGORIES, type Category } from '../../../shared/types.ts'
+import type { Difficulty, Question } from './types.ts'
 
 export const QUESTIONS_PER_CATEGORY = 10
 export const CHOICES_PER_QUESTION = 4
@@ -99,4 +101,9 @@ export function loadQuestions(data: unknown): Question[] {
   const errors = validateQuestions(data)
   if (errors.length > 0) throw new Error(`문제 데이터 오류:\n${errors.join('\n')}`)
   return data as Question[]
+}
+
+/** Reads and validates the question bank file (server/data/questions.json). */
+export function loadQuestionFile(path: string | URL): Question[] {
+  return loadQuestions(JSON.parse(readFileSync(path, 'utf8')))
 }

@@ -1,16 +1,18 @@
 import { useEffect, useRef } from 'react'
-import { CATEGORIES, CATEGORY_LABELS, type GameResult, type WrongAnswer } from '../types/quiz'
+import { CATEGORIES, CATEGORY_LABELS, type FinishResponse, type WrongAnswer } from '../types/quiz'
 import { formatDuration } from '../game/format'
+import { LeaderboardTable } from './LeaderboardTable'
 import { WrongAnswerNote } from './WrongAnswerNote'
 import styles from './ResultScreen.module.css'
 
 interface Props {
-  result: GameResult
+  finish: FinishResponse
   wrongAnswers: WrongAnswer[]
   onRestart: () => void
 }
 
-export function ResultScreen({ result, wrongAnswers, onRestart }: Props) {
+export function ResultScreen({ finish, wrongAnswers, onRestart }: Props) {
+  const { result, rank, scoreId } = finish
   const headingRef = useRef<HTMLHeadingElement>(null)
 
   useEffect(() => {
@@ -29,6 +31,10 @@ export function ResultScreen({ result, wrongAnswers, onRestart }: Props) {
       </div>
 
       <dl className={styles.summary}>
+        <div className={styles.rankItem}>
+          <dt>내 순위</dt>
+          <dd>{rank}위</dd>
+        </div>
         <div>
           <dt>정답 수</dt>
           <dd>
@@ -59,6 +65,18 @@ export function ResultScreen({ result, wrongAnswers, onRestart }: Props) {
           )
         })}
       </ul>
+
+      <h2 className={styles.subtitle}>순위표</h2>
+      <LeaderboardTable
+        mine={{
+          id: scoreId,
+          rank,
+          nickname: result.nickname,
+          score: result.score,
+          durationSec: result.durationSec,
+          playedAt: '',
+        }}
+      />
 
       <WrongAnswerNote wrongAnswers={wrongAnswers} />
 

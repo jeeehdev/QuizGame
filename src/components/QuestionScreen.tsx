@@ -1,29 +1,34 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
-import { CATEGORY_LABELS, type GameState } from '../types/quiz'
+import { isLastQuestion, type PlayingState } from '../game/reducer'
+import { CATEGORY_LABELS } from '../types/quiz'
+import { ErrorRetry } from './ErrorRetry'
 import { FeedbackSheet } from './FeedbackSheet'
 import { GameToolbar } from './GameToolbar'
 import styles from './QuestionScreen.module.css'
 
 interface Props {
-  state: GameState
+  state: PlayingState
   soundEnabled: boolean
   onToggleSound: () => void
   onQuit: () => void
   onAnswer: (choiceIndex: number) => void
   onNext: () => void
+  onFinish: () => void
 }
 
-export function QuestionScreen({ state, soundEnabled, onToggleSound, onQuit, onAnswer, onNext }: Props) {
+export function QuestionScreen({ state, soundEnabled, onToggleSound, onQuit, onAnswer, onNext, onFinish }: Props) {
   const question = state.questions[state.currentIndex]
-  const answer = state.answers[state.currentIndex]
+  const reveal = state.reveals[state.currentIndex]
   const total = state.questions.length
   const number = state.currentIndex + 1
-  const isLast = number === total
+  const isLast = isLastQuestion(state)
+  const pending = state.pendingChoice
+  const answerError = !reveal && pending !== null ? state.error : null
   const headingRef = useRef<HTMLHeadingElement>(null)
   const choicesRef = useRef<HTMLDivElement>(null)
   const sheetRef = useRef<HTMLElement>(null)
   const mainRef = useRef<HTMLElement>(null)
-  const answered = answer !== undefined
+  const answered = reveal !== undefined
 
   // Each new question moves focus to its text so screen readers start there.
   useEffect(() => {
@@ -43,32 +48,32 @@ export function QuestionScreen({ state, soundEnabled, onToggleSound, onQuit, onA
     const choicesBottom = choicesRef.current?.getBoundingClientRect().bottom ?? 0
     const hiddenBy = choicesBottom - (window.innerHeight - height - 12)
     if (hiddenBy > 0) window.scrollBy({ top: hiddenBy, behavior: 'instant' })
-  }, [answered, question.id])
+  }, [answered, question.id, state.error])
 
   function choiceClass(index: number): string {
-    if (!answer) return styles.choice
-    if (index === question.answerIndex) return `${styles.choice} ${styles.correct}`
-    if (index === answer.choiceIndex) return `${styles.choice} ${styles.wrong}`
+    if (!reveal) return index === pending ? `${styles.choice} ${styles.pending}` : styles.choice
+    if (index === reveal.answerIndex) return `${styles.choice} ${styles.correct}`
+    if (index === reveal.choiceIndex) return `${styles.choice} ${styles.wrong}`
     return `${styles.choice} ${styles.dimmed}`
   }
 
   function choiceMark(index: number): string {
-    if (!answer) return ''
-    if (index === question.answerIndex) return '✓'
-    if (index === answer.choiceIndex) return '✗'
+    if (!reveal) return ''
+    if (index === reveal.answerIndex) return '✓'
+    if (index === reveal.choiceIndex) return '✗'
     return ''
   }
 
   function choiceLabel(index: number, choice: string): string {
     const base = `${index + 1}번, ${choice}`
-    if (!answer) return base
-    if (index === question.answerIndex) return `${base}, 정답${index === answer.choiceIndex ? ', 내가 고른 답' : ''}`
-    if (index === answer.choiceIndex) return `${base}, 내가 고른 답, 오답`
+    if (!reveal) return index === pending ? `${base}, 선택함` : base
+    if (index === reveal.answerIndex) return `${base}, 정답${index === reveal.choiceIndex ? ', 내가 고른 답' : ''}`
+    if (index === reveal.choiceIndex) return `${base}, 내가 고른 답, 오답`
     return base
   }
 
-  const announcement = answer
-    ? `${answer.correct ? '정답입니다.' : `오답입니다. 정답은 ${question.choices[question.answerIndex]}입니다.`} ${question.explanation}`
+  const announcement = reveal
+    ? `${reveal.correct ? '정답입니다.' : `오답입니다. 정답은 ${question.choices[reveal.answerIndex]}입니다.`} ${reveal.explanation}`
     : ''
 
   return (
@@ -97,20 +102,26 @@ export function QuestionScreen({ state, soundEnabled, onToggleSound, onQuit, onA
       </header>
 
       <h2 ref={headingRef} tabIndex={-1} className={styles.question}>
-        <span className={styles.srOnly}>
-          {number}번 문제.{' '}
-        </span>
+        <span className={styles.srOnly}>{number}번 문제. </span>
         {question.question}
       </h2>
 
-      <div ref={choicesRef} className={styles.choices} role="group" aria-label="보기 (숫자 키 1~4로 선택)">
+      <div
+        ref={choicesRef}
+        className={styles.choices}
+        role="group"
+        aria-label="보기 (숫자 키 1~4로 선택)"
+        aria-busy={pending !== null && !answerError}
+      >
         {question.choices.map((choice, index) => (
           <button
             key={`${question.id}-${index}`}
             type="button"
             className={choiceClass(index)}
             onClick={() => onAnswer(index)}
-            disabled={answer !== undefined}
+            // Locked once answered; while a request is pending only the chosen one stays enabled (for retry).
+            disabled={answered || (pending !== null && index !== pending)}
+            aria-pressed={!answered && index === pending ? true : undefined}
             aria-label={choiceLabel(index, choice)}
           >
             <span className={styles.choiceNumber} aria-hidden="true">
@@ -124,19 +135,25 @@ export function QuestionScreen({ state, soundEnabled, onToggleSound, onQuit, onA
         ))}
       </div>
 
+      {answerError && pending !== null && (
+        <ErrorRetry message={`답안을 보내지 못했습니다. ${answerError}`} onRetry={() => onAnswer(pending)} />
+      )}
+
       {/* Kept mounted so the verdict is announced when its text changes. */}
       <div className={styles.srOnly} aria-live="polite" aria-atomic="true">
         {announcement}
       </div>
 
-      {answer && (
+      {reveal && (
         <FeedbackSheet
           ref={sheetRef}
-          correct={answer.correct}
-          correctChoice={question.choices[question.answerIndex]}
-          explanation={question.explanation}
+          correct={reveal.correct}
+          correctChoice={question.choices[reveal.answerIndex]}
+          explanation={reveal.explanation}
           isLast={isLast}
-          onNext={onNext}
+          busy={state.finishing}
+          error={isLast ? state.error : null}
+          onNext={isLast ? onFinish : onNext}
         />
       )}
     </main>
