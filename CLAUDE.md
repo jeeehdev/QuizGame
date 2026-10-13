@@ -21,10 +21,18 @@
   - `server/data/questions.json`: 출제 문제 40개. `question-candidates.json`은 출제되지 않는 후보 문제. `banned-words.txt`는 닉네임 금칙어. `quiz.sqlite*`는 gitignore 대상
   - `server/src/game/`: 순수 게임 로직과 문제 검증(`validateQuestions`, `validateCandidates`)
   - `server/src/questionBank.ts`: 출제 문제와 후보 문제 교체. 나중에 선생님 모드 API도 이 함수를 쓴다
+  - `server/src/teacherAuth.ts`: 선생님 로그인(`/api/teacher/*`). 세션은 토큰 해시만 DB에 저장, 마지막 요청 후 30분 만료, 2분에 5번 틀리면 429. 선생님 기능 라우트는 이 라우터의 `requireTeacher` 뒤에 붙인다
   - `server/test/`: Supertest API 테스트
 - `shared/`: 클라이언트와 서버가 함께 쓰는 API 타입(`types.ts`)과 닉네임 규칙
 - `src/`: React 클라이언트. `src/api/client.ts`로만 서버와 통신하고, 화면 상태는 `src/game/reducer.ts`가 관리한다
   - `src/test/testServer.ts`: 클라이언트 테스트에서 실제 Express 앱과 메모리 DB로 fetch를 처리한다
+
+## 환경 변수
+
+- `PORT`(기본 3001), `DB_PATH`, `BANNED_WORDS_PATH`
+- `TEACHER_PASSWORD`: 선생님 공용 비밀번호(8자 이상). 없으면 `/api/teacher/*`가 모두 404
+- `NODE_ENV=production`: 선생님 세션 쿠키에 Secure를 붙인다(HTTPS 필요)
+- `TRUST_PROXY`: 리버스 프록시 뒤에서 실제 접속 IP로 로그인 실패를 세도록 Express `trust proxy` 값(`true`, 홉 수 등)
 
 ## 지켜야 할 것
 

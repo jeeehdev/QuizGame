@@ -1,15 +1,14 @@
 import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
-import express, { type ErrorRequestHandler, type Response } from 'express'
+import express, { type ErrorRequestHandler } from 'express'
 import type {
   AnswerResponse,
-  ApiErrorBody,
-  ApiErrorCode,
   CreateGameResponse,
   FinishResponse,
   LeaderboardResponse,
 } from '../../shared/types.ts'
+import { sendError } from './apiError.ts'
 import type { Db } from './db.ts'
 import {
   answerQuestion,
@@ -25,6 +24,7 @@ import type { Question, StoredAnswer } from './game/types.ts'
 import { insertGame, loadGame, markFinished, saveAnswers } from './gameStore.ts'
 import { checkNickname } from './nicknameFilter.ts'
 import { getLeaderboard, getRank, insertScore } from './scoreQueries.ts'
+import { createTeacherRouter } from './teacherAuth.ts'
 
 export const LEADERBOARD_DEFAULT_LIMIT = 10
 export const LEADERBOARD_MAX_LIMIT = 100
@@ -38,16 +38,29 @@ export interface AppOptions {
   now?: () => number
   /** Built client to serve next to the API (production). Omit to serve the API only. */
   clientDir?: string
+  /** Shared teacher password. Without it every /api/teacher route answers 404. */
+  teacherPassword?: string
+  /** Adds the Secure flag to the teacher session cookie (production, behind HTTPS). */
+  secureCookies?: boolean
+  /** Express "trust proxy" setting, so login limits see real client IPs behind a reverse proxy. */
+  trustProxy?: boolean | number | string
 }
 
-function sendError(res: Response, status: number, error: ApiErrorCode, message: string) {
-  res.status(status).json({ error, message } satisfies ApiErrorBody)
-}
-
-export function createApp({ db, questions, bannedWords, random = Math.random, now = Date.now, clientDir }: AppOptions) {
+export function createApp({
+  db,
+  questions,
+  bannedWords,
+  random = Math.random,
+  now = Date.now,
+  clientDir,
+  teacherPassword,
+  secureCookies = false,
+  trustProxy,
+}: AppOptions) {
   const bank = new Map(questions.map((q) => [q.id, q]))
   const app = express()
   app.disable('x-powered-by')
+  if (trustProxy !== undefined) app.set('trust proxy', trustProxy)
   app.use('/api', express.json({ limit: '4kb' }))
 
   // Starts a game. The response has the 40 questions in play order but no answers or explanations.
@@ -140,6 +153,10 @@ export function createApp({ db, questions, bannedWords, random = Math.random, no
       : LEADERBOARD_DEFAULT_LIMIT
     res.json({ entries: getLeaderboard(db, limit) } satisfies LeaderboardResponse)
   })
+
+  if (teacherPassword !== undefined) {
+    app.use('/api/teacher', createTeacherRouter({ db, password: teacherPassword, now, secureCookies }))
+  }
 
   app.use('/api', (_req, res) => sendError(res, 404, 'NOT_FOUND', '없는 API입니다.'))
 

@@ -100,6 +100,14 @@ export type ApiErrorCode =
   | 'GAME_NOT_COMPLETE'
   | 'NOT_FOUND'
   | 'INTERNAL'
+  | 'UNAUTHORIZED'
+  | 'WRONG_PASSWORD'
+  | 'TOO_MANY_ATTEMPTS'
+
+/** GET /api/teacher/session: the teacher is logged in until this time (ms since epoch), extended by each request. */
+export interface TeacherSessionResponse {
+  expiresAt: number
+}
 
 export interface ApiErrorBody {
   error: ApiErrorCode

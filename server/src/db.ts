@@ -34,6 +34,14 @@ export function openDb(path: string): Db {
       finished   INTEGER NOT NULL DEFAULT 0
     );
     CREATE INDEX IF NOT EXISTS games_started_at ON games (started_at);
+
+    -- Teacher login sessions. Only a SHA-256 hash of the cookie token is stored, never the token itself.
+    -- expires_at moves forward on every teacher request (idle timeout); expired rows are deleted by cleanup.
+    CREATE TABLE IF NOT EXISTS teacher_sessions (
+      token_hash TEXT    PRIMARY KEY,
+      created_at INTEGER NOT NULL,             -- ms since epoch
+      expires_at INTEGER NOT NULL              -- ms since epoch
+    );
   `)
   return db
 }
