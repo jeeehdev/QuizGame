@@ -2,7 +2,7 @@
 import { resolve } from 'node:path'
 import request from 'supertest'
 import { vi } from 'vitest'
-import { createApp } from '../../server/src/app.ts'
+import { createApp, type AppOptions } from '../../server/src/app.ts'
 import { openDb, type Db } from '../../server/src/db.ts'
 import { seededRandom } from '../../server/src/game/shuffle.ts'
 import { loadQuestionFile } from '../../server/src/game/validateQuestions.ts'
@@ -23,9 +23,14 @@ export interface TestServer {
   loseResponseNext: (pattern: RegExp) => void
 }
 
-export function installTestServer(): TestServer {
+/** Extra app options, e.g. teacher mode (teacherPassword, questionFiles, candidates). */
+type ServerOptions = Partial<Omit<AppOptions, 'db' | 'bannedWords'>>
+
+export function installTestServer(options: ServerOptions = {}): TestServer {
   const db = openDb(':memory:')
-  const app = createApp({ db, questions: serverQuestions, bannedWords, random: seededRandom(1) })
+  const app = createApp({ db, questions: serverQuestions, bannedWords, random: seededRandom(1), ...options })
+  // Cookies the "browser" holds (the teacher session), sent back like a same-origin fetch would.
+  const cookies = new Map<string, string>()
   const calls: string[] = []
   const failures: RegExp[] = []
   const lostResponses: RegExp[] = []
@@ -42,8 +47,17 @@ export function installTestServer(): TestServer {
     if (take(failures, call)) throw new TypeError('Failed to fetch')
     const agent = request(app)
     const req = method === 'POST' ? agent.post(url) : agent.get(url)
+    if (cookies.size > 0) req.set('Cookie', [...cookies].map(([k, v]) => `${k}=${v}`).join('; '))
     const res = init?.body ? await req.set('Content-Type', 'application/json').send(JSON.parse(String(init.body))) : await req
+    for (const header of (res.headers['set-cookie'] as unknown as string[] | undefined) ?? []) {
+      const [pair, ...attributes] = header.split(';')
+      const [name, value] = pair.split('=')
+      const expired = value === '' || attributes.some((a) => /expires=Thu, 01 Jan 1970/i.test(a))
+      if (expired) cookies.delete(name)
+      else cookies.set(name, value)
+    }
     if (take(lostResponses, call)) throw new TypeError('Failed to fetch')
+    if (res.status === 204) return new Response(null, { status: 204 })
     return new Response(JSON.stringify(res.body), { status: res.status, headers: { 'Content-Type': 'application/json' } })
   })
 

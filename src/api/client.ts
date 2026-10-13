@@ -22,7 +22,7 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, body?: unknown): Promise<T> {
+export async function request<T>(path: string, body?: unknown): Promise<T> {
   let response: Response
   try {
     response = await fetch(path, {
@@ -34,7 +34,8 @@ async function request<T>(path: string, body?: unknown): Promise<T> {
   } catch {
     throw new ApiError('서버에 연결하지 못했습니다. 네트워크 연결을 확인해 주세요.', 0)
   }
-  const data = (await response.json().catch(() => null)) as T | ApiErrorBody | null
+  // 204 No Content (teacher login/logout) has no body.
+  const data = (response.status === 204 ? null : await response.json().catch(() => null)) as T | ApiErrorBody | null
   if (!response.ok) {
     const error = data as ApiErrorBody | null
     throw new ApiError(error?.message ?? `요청이 실패했습니다. (${response.status})`, response.status, error?.error)

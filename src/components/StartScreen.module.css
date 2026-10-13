@@ -93,3 +93,17 @@
   composes: secondaryButton from '../styles/shared.module.css';
   min-height: 48px;
 }
+
+.teacherLink {
+  align-self: center;
+  margin-top: 8px;
+  padding: 8px;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.teacherLink:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}

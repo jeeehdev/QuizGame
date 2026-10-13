@@ -27,7 +27,8 @@
   - `server/test/`: Supertest API 테스트
 - `shared/`: 클라이언트와 서버가 함께 쓰는 API 타입(`types.ts`)과 닉네임 규칙
 - `src/`: React 클라이언트. `src/api/client.ts`로만 서버와 통신하고, 화면 상태는 `src/game/reducer.ts`가 관리한다
-  - `src/test/testServer.ts`: 클라이언트 테스트에서 실제 Express 앱과 메모리 DB로 fetch를 처리한다
+  - `src/test/testServer.ts`: 클라이언트 테스트에서 실제 Express 앱과 메모리 DB로 fetch를 처리한다(선생님 세션 쿠키도 주고받음)
+  - `src/teacher/`: `/teacher` 주소의 선생님 화면(로그인, 문제 교체). `src/Root.tsx`가 주소를 보고 따로 나눈 파일로 불러오므로 학생 번들에는 들어가지 않는다. 선생님 API 호출은 `src/teacher/teacherApi.ts`에만 둔다
 
 ## 환경 변수
 

@@ -71,6 +71,10 @@ export function StartScreen({ initialNickname, starting, serverError, onStart, o
       <button type="button" className={styles.leaderboard} onClick={onShowLeaderboard} disabled={starting}>
         순위표 보기
       </button>
+
+      <a className={styles.teacherLink} href="/teacher">
+        선생님
+      </a>
     </main>
   )
 }
