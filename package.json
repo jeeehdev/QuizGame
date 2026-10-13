@@ -17,7 +17,9 @@
     "sounds": "node scripts/generate-sounds.mjs",
     "delete-score": "node server/src/scripts/delete-score.ts",
     "swap-question": "node server/src/scripts/swap-question.ts",
-    "teacher-fixture": "node server/src/scripts/teacher-fixture.ts"
+    "teacher-fixture": "node server/src/scripts/teacher-fixture.ts",
+    "roster": "node server/src/scripts/roster.ts",
+    "import-roster": "node server/src/scripts/roster.ts import"
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",

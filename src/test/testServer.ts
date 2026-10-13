@@ -46,7 +46,8 @@ export function installTestServer(options: ServerOptions = {}): TestServer {
     calls.push(call)
     if (take(failures, call)) throw new TypeError('Failed to fetch')
     const agent = request(app)
-    const req = method === 'POST' ? agent.post(url) : agent.get(url)
+    const req =
+      method === 'POST' ? agent.post(url) : method === 'PATCH' ? agent.patch(url) : method === 'DELETE' ? agent.delete(url) : agent.get(url)
     if (cookies.size > 0) req.set('Cookie', [...cookies].map(([k, v]) => `${k}=${v}`).join('; '))
     const res = init?.body ? await req.set('Content-Type', 'application/json').send(JSON.parse(String(init.body))) : await req
     for (const header of (res.headers['set-cookie'] as unknown as string[] | undefined) ?? []) {

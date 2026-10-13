@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { ApiError, errorMessage } from '../api/client'
 import { ConfirmDialog } from '../components/ConfirmDialog'
 import { ErrorRetry } from '../components/ErrorRetry'
-import { teacherApi } from './teacherApi'
+import { fetchResult, teacherApi, type Loaded } from './teacherApi'
 import { CATEGORIES, CATEGORY_LABELS, type Category, type Difficulty, type QuizQuestion, type TeacherQuestionsResponse } from '../types/quiz'
 import styles from './Teacher.module.css'
 
@@ -10,7 +10,6 @@ const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard']
 const DIFFICULTY_LABELS: Record<Difficulty, string> = { easy: '쉬움', medium: '보통', hard: '어려움' }
 
 interface Props {
-  onLogout: () => void
   /** The session ended (401); go back to the login screen. */
   onExpired: () => void
 }
@@ -29,7 +28,7 @@ interface Pending {
 const slotKey = (category: Category, difficulty: Difficulty) => `${category}-${difficulty}`
 
 /** Lists questions in play next to candidates of the same category and difficulty, and swaps a chosen pair. */
-export function SwapScreen({ onLogout, onExpired }: Props) {
+export function SwapScreen({ onExpired }: Props) {
   const [data, setData] = useState<TeacherQuestionsResponse | null>(null)
   const [loadError, setLoadError] = useState<string | null>(null)
   const [selection, setSelection] = useState<Record<string, Selection>>({})
@@ -51,20 +50,28 @@ export function SwapScreen({ onLogout, onExpired }: Props) {
     [onExpired],
   )
 
-  const load = useCallback(async () => {
-    setLoadError(null)
-    try {
-      setData(await teacherApi.questions())
-    } catch (error) {
-      const message = handleError(error)
+  const apply = useCallback(
+    (result: Loaded<TeacherQuestionsResponse>) => {
+      if ('data' in result) {
+        setData(result.data)
+        setLoadError(null)
+        return
+      }
+      const message = handleError(result.error)
       if (message) setLoadError(message)
-    }
-  }, [handleError])
+    },
+    [handleError],
+  )
+  const load = useCallback(() => fetchResult(teacherApi.questions).then(apply), [apply])
 
   useEffect(() => {
     headingRef.current?.focus()
-    void load()
-  }, [load])
+    let active = true
+    void fetchResult(teacherApi.questions).then((result) => active && apply(result))
+    return () => {
+      active = false
+    }
+  }, [apply])
 
   function select(slot: string, change: Selection) {
     setSelection((current) => ({ ...current, [slot]: { ...current[slot], ...change } }))
@@ -110,14 +117,9 @@ export function SwapScreen({ onLogout, onExpired }: Props) {
 
   return (
     <main className={styles.screen}>
-      <div className={styles.titleRow}>
-        <h1 ref={headingRef} tabIndex={-1} className={styles.title}>
-          문제 교체
-        </h1>
-        <button type="button" className={styles.secondary} onClick={onLogout}>
-          로그아웃
-        </button>
-      </div>
+      <h1 ref={headingRef} tabIndex={-1} className={styles.title}>
+        문제 교체
+      </h1>
       <p className={styles.help}>
         출제 문제 하나와 같은 카테고리·난이도의 후보 문제 하나를 골라 바꿉니다. 바꾸면 바로 새 게임에 반영되고, 이미 시작한
         게임은 원래 문제로 끝납니다.
@@ -127,7 +129,15 @@ export function SwapScreen({ onLogout, onExpired }: Props) {
         {status?.text ?? ''}
       </p>
 
-      {loadError && <ErrorRetry message={loadError} onRetry={() => void load()} />}
+      {loadError && (
+        <ErrorRetry
+          message={loadError}
+          onRetry={() => {
+            setLoadError(null)
+            void load()
+          }}
+        />
+      )}
       {!data && !loadError && <p className={styles.status}>문제를 불러오는 중…</p>}
 
       {data && (

@@ -1,27 +1,21 @@
 # 선생님 모드 공통 규칙
 
-`.claude/commands/teacher-*.md` 명령이 함께 따르는 규칙입니다. 웹 화면의 선생님 모드(관리자 인증, 문제 교체)는 #39에서 따로 다룹니다.
+`.claude/commands/teacher-*.md` 명령과 웹 선생님 화면이 함께 따르는 규칙입니다.
 
-## 학생 명단: `teacher/roster.json`
+## 학생 명단 (DB)
 
-게임은 닉네임만 받으므로, 같은 학생이 여러 닉네임을 쓰면 다른 사람으로 보입니다. 명단에서 학생마다 닉네임을 묶어 줍니다.
+게임은 닉네임만 받으므로, 같은 학생이 여러 닉네임을 쓰면 다른 사람으로 보입니다. 명단에서 학생마다 닉네임을 묶어 줍니다. 명단은 DB(`teacher_settings`, `students`, `student_nicknames` 테이블)에 있고, 웹 선생님 화면의 "학생 명단"이나 CLI로 관리합니다.
 
-```json
-{
-  "className": "3학년 2반",
-  "students": [
-    { "number": 1, "name": "김민수", "nicknames": ["민수", "kms01"] },
-    { "number": 2, "name": "이서연", "nicknames": ["서연"] }
-  ]
-}
-```
-
-- `number`: 출석 번호(양의 정수, 중복 불가). 명령에서 학생을 가리킬 때 번호나 이름을 쓴다
+- **읽기**: `npm run -s roster -- list --json` → `{ "className": …, "students": [{ "id", "number", "name", "nicknames": [...], "playCount" }] }`
+- **명단에 없는 닉네임**: `npm run -s roster -- unmatched --json`
+- **바꾸기**: 웹 화면, 또는 `npm run roster -- add|link|unlink|remove|class …` (규칙은 `server/src/roster.ts` 하나로 같다)
+- **예전 파일 가져오기**: `npm run import-roster -- teacher/roster.json [--replace]`. 파일 형식은 `{ "className": "3학년 2반", "students": [{ "number": 1, "name": "김민수", "nicknames": ["민수"] }] }`
+- `number`: 출석 번호(1~999, 중복 불가). 명령에서 학생을 가리킬 때 번호나 이름을 쓴다
 - `nicknames`: 그 학생이 쓰는 닉네임. 한 닉네임은 한 학생에게만 속한다
-- 닉네임 비교는 앞뒤 공백을 지운 뒤 **정확히 같을 때만** 같은 사람으로 본다 (대소문자도 구분). 비슷한 닉네임을 추측해서 묶지 않는다
+- 닉네임 비교는 앞뒤 공백을 지운 뒤 **정확히 같을 때만** 같은 사람으로 본다 (대소문자도 구분). 비슷한 닉네임을 추측해서 묶지 않는다 ("비슷한 학생"은 선생님이 확인할 힌트로만 보여 준다)
 - 명단에 없는 닉네임의 기록은 "미등록"으로 따로 보여 주고, 학생 통계에는 넣지 않는다
-- `teacher/` 폴더는 학생 이름이 들어 있어 gitignore 대상이다. 저장소에 올리지 않는다
-- 명단 파일이 없으면 `/teacher-roster init`으로 만들라고 안내하고 멈춘다 (`teacher-roster` 자신은 예외)
+- 학생 이름은 DB(`server/data/quiz.sqlite`, gitignore 대상)에만 있다. 예전 `teacher/roster.json`과 보고서(`teacher/reports/`)도 gitignore 대상이다
+- 명단에 학생이 없으면 `/teacher-roster add`나 웹 화면으로 먼저 추가하라고 안내하고 멈춘다 (`teacher-roster` 자신은 예외)
 
 ## 데이터 읽기
 
@@ -47,7 +41,7 @@ SELECT g.score_id, g.nickname, g.answers FROM games g WHERE g.finished = 1 AND g
 - `correct_by_category`는 JSON(`{"history":2,"science":3,"geography":4,"arts":3}`), 카테고리마다 10문제, 점수는 맞힌 수 × 10 (400점 만점)
 - `answers`는 JSON 배열(`questionId`, `correct`). 문제 내용은 `server/data/questions.json`과 `question-candidates.json`에서 id로 찾는다
 - 문제별 답안은 **학생 단위로 센다**: 한 학생이 최근 24시간 안에 여러 번 완료했으면 그 학생의 **가장 최근 완료 게임 하나만** 쓴다. 게임 수로 세면 여러 번 푼 학생이 여러 명처럼 세진다
-- 중간에 나간 게임도 명단 학생의 것만 센다 (`games.nickname`을 명단으로 찾는다)
+- 중간에 나간 게임도 명단 학생의 것만 센다 (`games.nickname`을 `student_nicknames`로 찾는다)
 - 카테고리 이름: history 한국사, science 과학, geography 지리, arts 예술과 문화
 
 ## 기간 인자

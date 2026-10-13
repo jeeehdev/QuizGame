@@ -43,13 +43,6 @@
   max-width: 400px;
 }
 
-.titleRow {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
 .title {
   margin: 0;
   font-size: 1.5rem;
@@ -314,4 +307,200 @@
 .app code {
   font-family: ui-monospace, Consolas, monospace;
   font-size: 0.875em;
+}
+
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 12px 20px 0;
+}
+
+.navList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.navItem {
+  composes: secondaryButton from '../styles/shared.module.css';
+}
+
+.navItem[aria-current='page'] {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary-hover);
+}
+
+.muted {
+  color: var(--text-muted);
+}
+
+.hint {
+  margin: 4px 0 0;
+  font-size: 0.875rem;
+  color: var(--focus);
+  font-weight: 600;
+}
+
+.inlineForm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.inlineForm .input {
+  flex: 1 1 200px;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.caption {
+  padding-bottom: 6px;
+  text-align: left;
+  font-weight: 700;
+}
+
+.table th,
+.table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.table thead th {
+  background: var(--surface);
+  font-size: 0.875rem;
+}
+
+.table tbody th {
+  font-weight: 600;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 4px 2px 10px;
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.875rem;
+}
+
+.chipButton {
+  min-width: 32px;
+  min-height: 32px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.chipButton:hover {
+  background: var(--border);
+}
+
+.chipButton:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.panelTitle {
+  margin: 0;
+  font-size: 1.125rem;
+}
+
+.addForm {
+  display: grid;
+  gap: 10px;
+}
+
+@media (min-width: 720px) {
+  .addForm {
+    grid-template-columns: 100px 1fr 1.5fr auto;
+    align-items: end;
+  }
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.unmatchedList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.unmatched {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.linkRow {
+  display: flex;
+  gap: 6px;
+}
+
+.select {
+  min-height: 44px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  font: inherit;
+}
+
+.select:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 1px;
 }

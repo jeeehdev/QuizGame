@@ -42,6 +42,25 @@ export function openDb(path: string): Db {
       created_at INTEGER NOT NULL,             -- ms since epoch
       expires_at INTEGER NOT NULL              -- ms since epoch
     );
+
+    -- Teacher mode settings, e.g. key 'class_name'.
+    CREATE TABLE IF NOT EXISTS teacher_settings (
+      key   TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
+
+    -- Class roster. Scores are linked to students only through nicknames, so removing a student keeps the scores.
+    CREATE TABLE IF NOT EXISTS students (
+      id     INTEGER PRIMARY KEY AUTOINCREMENT,
+      number INTEGER NOT NULL UNIQUE CHECK (number > 0),   -- 출석 번호
+      name   TEXT    NOT NULL
+    );
+    -- A nickname belongs to at most one student.
+    CREATE TABLE IF NOT EXISTS student_nicknames (
+      nickname   TEXT    PRIMARY KEY,
+      student_id INTEGER NOT NULL REFERENCES students (id) ON DELETE CASCADE
+    );
+    CREATE INDEX IF NOT EXISTS student_nicknames_student ON student_nicknames (student_id);
   `)
   return db
 }

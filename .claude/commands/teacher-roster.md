@@ -1,38 +1,34 @@
 ---
-description: 선생님 모드 학생 명단 관리 (학생 ↔ 닉네임 연결)
-argument-hint: "[list | init <반 이름> | add <번호> <이름> <닉네임...> | link <번호> <닉네임> | unlink <닉네임> | remove <번호> | unmatched]"
+description: 선생님 모드 학생 명단 관리 (학생 ↔ 닉네임 연결, DB)
+argument-hint: "[list | class <반 이름> | add <번호> <이름> <닉네임...> | link <번호> <닉네임> | unlink <닉네임> | remove <번호> | unmatched | import <파일>]"
 ---
 
-선생님 모드의 학생 명단 `teacher/roster.json`을 관리해 줘. 형식과 규칙은 `docs/teacher-mode.md`의 "학생 명단"을 따른다.
+선생님 모드의 학생 명단을 관리해 줘. 명단은 DB에 있고, 규칙은 `docs/teacher-mode.md`의 "학생 명단"을 따른다.
 
 작업: $ARGUMENTS
 - 첫 단어가 작업, 나머지가 인자다. 비어 있으면 `list`
 - 알 수 없는 작업이거나 인자가 모자라면 아무것도 바꾸지 말고 아래 작업 목록을 보여 준다
-- `init` 말고 다른 작업인데 `teacher/roster.json`이 없으면 `/teacher-roster init <반 이름>`으로 먼저 만들라고 안내하고 멈춘다
 
-## 작업
+## 실행 방법
 
-- `list`: 명단을 번호 | 이름 | 닉네임 | 기록 수(전체 기간) 표로 보여 준다. 기록이 0건인 학생은 "미응시"
-- `init <반 이름>`: `teacher/roster.json`을 `{ "className": "<반 이름>", "students": [] }`로 만든다. 이미 있으면 덮어쓰지 않고 멈춘다
-- `add <번호> <이름> <닉네임...>`: 학생을 추가한다. 닉네임은 0개 이상
-- `link <번호> <닉네임>`: 학생에게 닉네임을 하나 더 연결한다
-- `unlink <닉네임>`: 닉네임 연결을 끊는다
-- `remove <번호>`: 학생을 명단에서 뺀다. DB의 기록은 지우지 않는다
-- `unmatched`: DB에 있지만 명단의 어느 학생에게도 연결되지 않은 닉네임을 닉네임 | 기록 수 | 최고 점수 | 처음·마지막 플레이 시각 표로 보여 준다. 명단의 이름이나 기존 닉네임과 비슷해 보이는 것이 있으면 "확인 필요"로 표시만 하고, 직접 연결하지는 않는다 (`link`를 안내한다)
+모든 작업은 `npm run roster -- <작업> <인자>`를 그대로 실행한다. 이 CLI가 웹 선생님 화면과 같은 코드(`server/src/roster.ts`)로 검증하므로, **DB나 파일을 직접 고치지 않는다.**
 
-## 바꾸는 작업(`init`, `add`, `link`, `unlink`, `remove`)의 검증
-
-파일에 쓰기 전에 확인하고, 하나라도 어긋나면 쓰지 말고 이유를 알린다.
-
-- 번호는 양의 정수이고 학생끼리 겹치지 않는다
-- 이름은 비어 있지 않다
-- 닉네임은 게임 규칙(`shared/nickname.ts`의 `validateNickname`: 2~10자, 한글·영문·숫자)을 지킨다
-- 한 닉네임이 두 학생에게 연결되지 않는다
-- `remove`는 그 학생의 번호·이름·닉네임을 보여 주고 확인을 받은 뒤에 한다
-
-쓴 뒤에는 파일을 다시 읽어 JSON이 올바른지 확인하고, 바뀐 학생 줄과 함께 `list` 결과를 보여 준다. 학생은 번호 순으로 정렬해 저장하고, 두 칸 들여쓰기로 쓴다.
+| 작업 | 실행 | 하는 일 |
+| --- | --- | --- |
+| `list` | `npm run roster -- list` | 번호 · 이름 · 닉네임 · 기록 수(없으면 미응시) |
+| `class <반 이름>` | `npm run roster -- class <반 이름>` | 반 이름 정하기 |
+| `add <번호> <이름> <닉네임...>` | `npm run roster -- add …` | 학생 추가 (닉네임 0개 이상) |
+| `link <번호> <닉네임>` | `npm run roster -- link …` | 학생에게 닉네임 연결 |
+| `unlink <닉네임>` | `npm run roster -- unlink …` | 닉네임 연결 해제 |
+| `remove <번호>` | `npm run roster -- remove …` | 명단에서 빼기 (기록은 남음) |
+| `unmatched` | `npm run roster -- unmatched` | 명단에 없는 닉네임과 "확인 필요"(비슷한 학생) |
+| `import <파일>` | `npm run import-roster -- <파일>` | 예전 `teacher/roster.json` 형식 파일 가져오기 |
 
 ## 지키는 것
 
-- `teacher/`가 `.gitignore`에 들어 있는지 확인하고, 없으면 바꾸기 전에 알린다
-- DB는 `docs/teacher-mode.md`대로 읽기 전용으로만 연다
+- `remove`는 실행하기 전에 그 학생의 번호·이름·닉네임을 `list`로 보여 주고 **확인을 받은 뒤에** 실행한다
+- `import`는 DB에 학생이 이미 있으면 CLI가 거부한다. 바꿔 쓸지 사용자에게 묻고, 그렇다고 하면 `--replace`를 붙여 다시 실행한다
+- `unmatched`의 "확인 필요"는 힌트일 뿐이다. 직접 연결하지 말고 `link` 명령을 안내한다
+- CLI가 오류를 내면(번호 중복, 닉네임 형식, 이미 연결된 닉네임 등) 오류 문구를 그대로 보여 주고 멈춘다
+- 바꾸는 작업이 끝나면 CLI가 출력한 명단을 표로 보여 준다
+- 웹 선생님 화면(`/teacher`의 "학생 명단")에서도 같은 일을 할 수 있다고 한 줄 안내한다

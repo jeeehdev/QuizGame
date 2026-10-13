@@ -105,6 +105,10 @@ export type ApiErrorCode =
   | 'WRONG_PASSWORD'
   | 'TOO_MANY_ATTEMPTS'
   | 'SWAP_REJECTED'
+  | 'DUPLICATE_NUMBER'
+  | 'NICKNAME_TAKEN'
+  | 'STUDENT_NOT_FOUND'
+  | 'NICKNAME_NOT_FOUND'
 
 export type Difficulty = 'easy' | 'medium' | 'hard'
 
@@ -137,6 +141,51 @@ export interface SwapResponse extends TeacherQuestionsResponse {
   added: QuizQuestion
   /** The question that left play and is now a candidate. */
   removed: QuizQuestion
+}
+
+/** One student on the class roster. playCount counts finished games under any of the student's nicknames. */
+export interface RosterStudent {
+  id: number
+  /** 출석 번호 */
+  number: number
+  name: string
+  nicknames: string[]
+  playCount: number
+}
+
+/** GET /api/teacher/roster */
+export interface RosterResponse {
+  className: string
+  students: RosterStudent[]
+}
+
+/** POST /api/teacher/students */
+export interface AddStudentRequest {
+  number: number
+  name: string
+  nicknames?: string[]
+}
+
+/** PATCH /api/teacher/students/:id */
+export interface UpdateStudentRequest {
+  number?: number
+  name?: string
+}
+
+/** A nickname with saved scores that is not linked to any student. */
+export interface UnmatchedNickname {
+  nickname: string
+  playCount: number
+  bestScore: number
+  firstPlayedAt: string
+  lastPlayedAt: string
+  /** Students whose name or nicknames look like this nickname (e.g. 지훈2 → 박지훈). Never linked automatically. */
+  similarStudentIds: number[]
+}
+
+/** GET /api/teacher/nicknames/unmatched */
+export interface UnmatchedNicknamesResponse {
+  nicknames: UnmatchedNickname[]
 }
 
 /** GET /api/teacher/session: the teacher is logged in until this time (ms since epoch), extended by each request. */

@@ -22,11 +22,12 @@ export class ApiError extends Error {
   }
 }
 
-export async function request<T>(path: string, body?: unknown): Promise<T> {
+/** Sends a JSON request. The method defaults to GET without a body and POST with one. */
+export async function request<T>(path: string, body?: unknown, method?: 'PATCH' | 'DELETE'): Promise<T> {
   let response: Response
   try {
     response = await fetch(path, {
-      method: body === undefined ? 'GET' : 'POST',
+      method: method ?? (body === undefined ? 'GET' : 'POST'),
       headers: body === undefined ? undefined : { 'Content-Type': 'application/json' },
       body: body === undefined ? undefined : JSON.stringify(body),
       signal: AbortSignal.timeout(TIMEOUT_MS),

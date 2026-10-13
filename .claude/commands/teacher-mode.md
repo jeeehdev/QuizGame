@@ -17,9 +17,9 @@ argument-hint: "[기간: all | today | 7d | 30d | YYYY-MM-DD~YYYY-MM-DD] [save] 
 단계마다 "N단계 시작 / 완료"를 한 줄씩 알린다.
 
 1. **준비 점검**
-   - `teacher/roster.json`이 있고 JSON이 올바른지, 학생이 1명 이상인지 확인한다. 아니면 `/teacher-roster init <반 이름>`과 `add` 사용법을 안내하고 **중단**한다
+   - `npm run -s roster -- list --json`으로 명단을 읽어 학생이 1명 이상인지 확인한다. 아니면 웹 선생님 화면의 "학생 명단"이나 `/teacher-roster add`, 예전 파일이 있으면 `npm run import-roster -- teacher/roster.json`을 안내하고 **중단**한다
    - DB 파일이 있는지 확인한다. 없으면 중단한다
-   - `teacher/`가 `.gitignore`에 있는지 확인한다. 없으면 보고서를 저장하지 않고 경고한다
+   - `teacher/`(보고서 폴더)가 `.gitignore`에 있는지 확인한다. 없으면 보고서를 저장하지 않고 경고한다
 2. **명단 점검**: `teacher-roster`의 `unmatched`. 미등록 닉네임이 있으면 보고서 맨 앞에 알리고 계속 진행한다 (명단은 바꾸지 않는다)
 3. **반 성적표**: `teacher-scores` (기간, 정렬 `number`)
 4. **카테고리·문제 약점**: `teacher-weakness` (반 전체, 기간)
