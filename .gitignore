@@ -25,3 +25,7 @@ dist-ssr
 
 # SQLite database (server/data/quiz.sqlite and its WAL files)
 server/data/*.sqlite*
+
+# Personal Claude Code settings
+.claude/settings.local.json
+CLAUDE.local.md
