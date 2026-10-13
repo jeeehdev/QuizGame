@@ -1,4 +1,5 @@
-// Types and constants shared by the client and the server. Nothing here may contain answers.
+// Types and constants shared by the client and the server. No question data lives here;
+// types that carry answers (QuizQuestion) are only sent to a logged-in teacher.
 
 export const CATEGORIES = ['history', 'science', 'geography', 'arts'] as const
 export type Category = (typeof CATEGORIES)[number]
@@ -103,6 +104,40 @@ export type ApiErrorCode =
   | 'UNAUTHORIZED'
   | 'WRONG_PASSWORD'
   | 'TOO_MANY_ATTEMPTS'
+  | 'SWAP_REJECTED'
+
+export type Difficulty = 'easy' | 'medium' | 'hard'
+
+/** A full question with its answer and explanation (server data files, teacher API). */
+export interface QuizQuestion {
+  id: string
+  category: Category
+  difficulty: Difficulty
+  question: string
+  choices: string[]
+  answerIndex: number
+  explanation: string
+}
+
+/** GET /api/teacher/questions: questions in play and the candidate pool. */
+export interface TeacherQuestionsResponse {
+  bank: QuizQuestion[]
+  candidates: QuizQuestion[]
+}
+
+/** POST /api/teacher/swap */
+export interface SwapRequest {
+  bankId: string
+  candidateId: string
+}
+
+/** POST /api/teacher/swap: what moved, and both lists after the swap. */
+export interface SwapResponse extends TeacherQuestionsResponse {
+  /** The candidate that is now in play. */
+  added: QuizQuestion
+  /** The question that left play and is now a candidate. */
+  removed: QuizQuestion
+}
 
 /** GET /api/teacher/session: the teacher is logged in until this time (ms since epoch), extended by each request. */
 export interface TeacherSessionResponse {

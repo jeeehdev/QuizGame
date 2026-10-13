@@ -4,20 +4,24 @@ import { openDb } from './db.ts'
 import { loadQuestionFile } from './game/validateQuestions.ts'
 import { deleteExpiredGames } from './gameStore.ts'
 import { loadBannedWords } from './nicknameFilter.ts'
+import { loadCandidateFile } from './questionBank.ts'
 import { deleteExpiredSessions } from './teacherAuth.ts'
 
 const CLEANUP_INTERVAL_MS = 60 * 60 * 1000
 const apiOnly = process.argv.includes('--api-only')
 
 const db = openDb(config.dbPath)
+const questions = loadQuestionFile(config.questionsPath)
 const app = createApp({
   db,
-  questions: loadQuestionFile(config.questionsPath),
+  questions,
+  candidates: loadCandidateFile(config.candidatesPath, questions),
   bannedWords: loadBannedWords(config.bannedWordsPath),
   clientDir: apiOnly ? undefined : config.clientDir,
   teacherPassword: config.teacherPassword,
   secureCookies: config.secureCookies,
   trustProxy: config.trustProxy,
+  questionFiles: { bankPath: config.questionsPath, candidatesPath: config.candidatesPath },
 })
 
 function cleanup() {

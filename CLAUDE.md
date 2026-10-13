@@ -20,7 +20,9 @@
 - `server/`: Express + better-sqlite3. 문제, 섞기, 정답 판정, 점수, 소요 시간은 모두 서버가 한다
   - `server/data/questions.json`: 출제 문제 40개. `question-candidates.json`은 출제되지 않는 후보 문제. `banned-words.txt`는 닉네임 금칙어. `quiz.sqlite*`는 gitignore 대상
   - `server/src/game/`: 순수 게임 로직과 문제 검증(`validateQuestions`, `validateCandidates`)
-  - `server/src/questionBank.ts`: 출제 문제와 후보 문제 교체. 나중에 선생님 모드 API도 이 함수를 쓴다
+  - `server/src/questionBank.ts`: 출제 문제와 후보 문제 교체(CLI와 선생님 API가 함께 씀). 두 파일을 임시 파일에 쓴 뒤 이름을 바꿔 저장
+  - `server/src/teacherQuestions.ts`: 선생님 API `GET /api/teacher/questions`, `POST /api/teacher/swap`. 교체하면 실행 중인 서버의 문제 목록도 바로 바뀐다
+  - 새 게임은 출제 문제에서만 뽑고, 저장된 게임은 출제 + 후보 문제 전체에서 id로 찾는다. 그래서 교체 전에 시작한 게임도 원래 문제로 끝난다(재시작 후에도). 문제 id는 재사용하지 않는다
   - `server/src/teacherAuth.ts`: 선생님 로그인(`/api/teacher/*`). 세션은 토큰 해시만 DB에 저장, 마지막 요청 후 30분 만료, 2분에 5번 틀리면 429. 선생님 기능 라우트는 이 라우터의 `requireTeacher` 뒤에 붙인다
   - `server/test/`: Supertest API 테스트
 - `shared/`: 클라이언트와 서버가 함께 쓰는 API 타입(`types.ts`)과 닉네임 규칙
@@ -44,7 +46,7 @@
 
 1. `docs/question-guidelines.md`의 교차 검증 기준(정답이 하나인지, 최상급 표현의 기준, 시점·범위, 출처 2개 이상)을 따른다
 2. 형식 제한: 문제 80자, 보기 30자, 해설 120자 이내. 출제 문제는 카테고리마다 10문제(쉬움 4 · 보통 4 · 어려움 2)로 고정
-3. 새 문제는 `questions.json`에 바로 넣지 않고 `/quiz-add`로 후보 파일에 추가한 뒤, `/quiz-swap`(`npm run swap-question`)으로 같은 카테고리·난이도의 출제 문제와 바꾼다. 교체 후 서버를 재시작해야 반영된다
+3. 새 문제는 `questions.json`에 바로 넣지 않고 `/quiz-add`로 후보 파일에 추가한 뒤, `/quiz-swap`(`npm run swap-question`) 또는 선생님 API로 같은 카테고리·난이도의 출제 문제와 바꾼다. CLI로 바꾸면 서버를 재시작해야 반영되고, 선생님 API는 바로 반영된다
 4. `npm test`로 검증한 뒤 `npm run review-doc`으로 검수표를 다시 만든다. 검수표는 직접 고치지 않는다
 5. 검토용 명령: `/quiz-validate [카테고리]`(최상급 표현), `/quiz-range <시작> <끝>`(난이도·정답 분포), `/quiz-check [카테고리]`(정답 정확성), `/quiz-daily [개수]`(점검·후보 추가·검증·백업)
 6. 운영 명령: `/quiz-stats [기간]`(게임 통계), `/quiz-leaderboard [show|find|check|delete]`(순위표 관리). DB는 읽기 전용으로 열고, 삭제는 `npm run delete-score`로만 한다

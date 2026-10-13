@@ -25,13 +25,17 @@ import { insertGame, loadGame, markFinished, saveAnswers } from './gameStore.ts'
 import { checkNickname } from './nicknameFilter.ts'
 import { getLeaderboard, getRank, insertScore } from './scoreQueries.ts'
 import { createTeacherRouter } from './teacherAuth.ts'
+import { createTeacherQuestionsRouter, type QuestionFiles } from './teacherQuestions.ts'
 
 export const LEADERBOARD_DEFAULT_LIMIT = 10
 export const LEADERBOARD_MAX_LIMIT = 100
 
 export interface AppOptions {
   db: Db
+  /** Questions in play; new games draw from these. */
   questions: Question[]
+  /** Candidate pool. Games started before a swap may still use a question that is now a candidate. */
+  candidates?: Question[]
   bannedWords: string[]
   /** Injected for tests; defaults to Math.random / Date.now. */
   random?: RandomFn
@@ -44,11 +48,14 @@ export interface AppOptions {
   secureCookies?: boolean
   /** Express "trust proxy" setting, so login limits see real client IPs behind a reverse proxy. */
   trustProxy?: boolean | number | string
+  /** Data files the teacher swap API writes. Without them the swap API is not available. */
+  questionFiles?: QuestionFiles
 }
 
 export function createApp({
   db,
   questions,
+  candidates = [],
   bannedWords,
   random = Math.random,
   now = Date.now,
@@ -56,8 +63,12 @@ export function createApp({
   teacherPassword,
   secureCookies = false,
   trustProxy,
+  questionFiles,
 }: AppOptions) {
-  const bank = new Map(questions.map((q) => [q.id, q]))
+  // New games draw from `playable`. Stored games are rebuilt from `known` (in play + candidates), so a game
+  // started before a swap keeps its original questions until it ends, even after a restart.
+  let playable = questions
+  let known = new Map([...candidates, ...questions].map((q) => [q.id, q]))
   const app = express()
   app.disable('x-powered-by')
   if (trustProxy !== undefined) app.set('trust proxy', trustProxy)
@@ -70,7 +81,7 @@ export function createApp({
     if (problem) return sendError(res, 400, 'INVALID_NICKNAME', problem)
 
     const id = randomUUID()
-    const state = createGame(questions, nickname, { random, now: now() })
+    const state = createGame(playable, nickname, { random, now: now() })
     insertGame(db, id, state)
     res.status(201).json({
       gameId: id,
@@ -88,7 +99,7 @@ export function createApp({
 
     // Load, check and save in one transaction so concurrent requests cannot both answer the same question.
     const outcome = db.transaction(() => {
-      const game = loadGame(db, bank, req.params.id)
+      const game = loadGame(db, known, req.params.id)
       if (!game) return { status: 404, error: 'GAME_NOT_FOUND', message: '게임을 찾을 수 없습니다.' } as const
 
       const index = game.state.questions.findIndex((q) => q.id === questionId)
@@ -120,7 +131,7 @@ export function createApp({
   // Score and time come only from the server's records; anything the client sends in the body is ignored.
   app.post('/api/games/:id/finish', (req, res) => {
     const outcome = db.transaction(() => {
-      const game = loadGame(db, bank, req.params.id)
+      const game = loadGame(db, known, req.params.id)
       if (!game) return { status: 404, error: 'GAME_NOT_FOUND', message: '게임을 찾을 수 없습니다.' } as const
       if (!isComplete(game.state)) {
         return {
@@ -155,7 +166,19 @@ export function createApp({
   })
 
   if (teacherPassword !== undefined) {
-    app.use('/api/teacher', createTeacherRouter({ db, password: teacherPassword, now, secureCookies }))
+    const teacher = createTeacherRouter({ db, password: teacherPassword, now, secureCookies })
+    if (questionFiles) {
+      teacher.use(
+        createTeacherQuestionsRouter({
+          files: questionFiles,
+          onSwap: (result) => {
+            playable = result.bank
+            known = new Map([...result.candidates, ...result.bank].map((q) => [q.id, q]))
+          },
+        }),
+      )
+    }
+    app.use('/api/teacher', teacher)
   }
 
   app.use('/api', (_req, res) => sendError(res, 404, 'NOT_FOUND', '없는 API입니다.'))

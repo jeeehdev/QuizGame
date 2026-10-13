@@ -1,9 +1,10 @@
 // Moves questions between the question bank (questions.json) and the candidate pool (question-candidates.json).
 // The swap-question CLI uses this; a teacher mode can call the same functions later.
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import type { Category } from '../../shared/types.ts'
 import type { Question } from './game/types.ts'
-import { ID_PREFIX, loadQuestions, validateCandidates } from './game/validateQuestions.ts'
+import { ID_PREFIX, loadQuestions, validateCandidates, validateQuestions } from './game/validateQuestions.ts'
 
 export class QuestionBankError extends Error {
   constructor(message: string) {
@@ -56,7 +57,8 @@ export function swapQuestion(
 
   const nextBank = bank.with(index, added)
   const nextCandidates = [...candidates.filter((q) => q.id !== candidateId), removed]
-  loadQuestions(nextBank)
+  const bankErrors = validateQuestions(nextBank)
+  if (bankErrors.length > 0) throw new QuestionBankError(`문제 데이터 오류:\n${bankErrors.join('\n')}`)
   const errors = validateCandidates(nextCandidates, nextBank)
   if (errors.length > 0) throw new QuestionBankError(`후보 문제 데이터 오류:\n${errors.join('\n')}`)
   return { bank: nextBank, candidates: nextCandidates, removed, added }
@@ -82,7 +84,16 @@ export function loadCandidateFile(path: string | URL, bank: readonly Question[])
   return data as Question[]
 }
 
-/** Swaps a bank question with a candidate in the two data files. The running server needs a restart to see it. */
+const filePath = (path: string | URL) => (typeof path === 'string' ? path : fileURLToPath(path))
+
+/**
+ * Swaps a bank question with a candidate in the two data files. The CLI needs a server restart to take effect;
+ * the teacher API also updates the running server.
+ *
+ * Both files are written to temporary files first and then renamed over the originals, so a failed write never
+ * leaves a half-written file. Only a crash between the two renames can leave them out of step; the next start
+ * then stops with a duplicate-id error, and the files can be restored from git.
+ */
 export function swapQuestionFiles(
   bankPath: string | URL,
   candidatesPath: string | URL,
@@ -92,7 +103,16 @@ export function swapQuestionFiles(
   const bank = loadQuestions(JSON.parse(readFileSync(bankPath, 'utf8')))
   const candidates = loadCandidateFile(candidatesPath, bank)
   const result = swapQuestion(bank, candidates, bankId, candidateId)
-  writeFileSync(bankPath, formatQuestionFile(result.bank))
-  writeFileSync(candidatesPath, formatQuestionFile(result.candidates))
+  const writes = [
+    { target: filePath(bankPath), text: formatQuestionFile(result.bank) },
+    { target: filePath(candidatesPath), text: formatQuestionFile(result.candidates) },
+  ].map((w) => ({ ...w, temp: `${w.target}.${process.pid}.tmp` }))
+  try {
+    for (const w of writes) writeFileSync(w.temp, w.text)
+  } catch (error) {
+    for (const w of writes) rmSync(w.temp, { force: true })
+    throw error
+  }
+  for (const w of writes) renameSync(w.temp, w.target)
   return result
 }

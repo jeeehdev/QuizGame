@@ -1,17 +1,9 @@
-import type { Category } from '../../../shared/types.ts'
+import type { QuizQuestion } from '../../../shared/types.ts'
 
-export type Difficulty = 'easy' | 'medium' | 'hard'
+export type { Difficulty } from '../../../shared/types.ts'
 
-/** A question with its answer. Server-only. */
-export interface Question {
-  id: string
-  category: Category
-  difficulty: Difficulty
-  question: string
-  choices: string[]
-  answerIndex: number
-  explanation: string
-}
+/** A question with its answer. Sent to clients only through the teacher API. */
+export type Question = QuizQuestion
 
 /** How one question is presented in a game: which question, and the order of its original choices. */
 export interface PlannedQuestion {
