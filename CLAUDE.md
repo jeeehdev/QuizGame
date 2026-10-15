@@ -15,6 +15,7 @@
 - `npm run swap-question -- <출제 id> <후보 id>`: 출제 문제와 같은 카테고리·난이도의 후보 문제를 바꾼다
 - `npm run roster -- <작업>`: 학생 명단(DB) 관리. `npm run import-roster -- teacher/roster.json`으로 예전 파일 가져오기
 - `npm run teacher-fixture -- <새 DB 경로>`: 선생님 모드 명령을 테스트할 DB와 명단을 만든다 (실제 DB 경로는 거부). 명령은 `DB_PATH=<그 경로>`로 실행한다
+- `npm run teacher-report -- [기간] [--json] [--compare 1,3,5|all]`: 선생님 보고서 계산 결과(웹 성적 화면과 같은 값). DB를 읽기 전용으로 연다
 
 ## 구조
 
@@ -25,6 +26,7 @@
   - `server/src/roster.ts`: 학생 명단(반 이름, 학생, 학생별 닉네임) DB 함수와 검증. 선생님 API(`teacherRoster.ts`)와 CLI(`scripts/roster.ts`)가 함께 쓴다
   - `server/src/teacherQuestions.ts`: 선생님 API `GET /api/teacher/questions`, `POST /api/teacher/swap`. 교체하면 실행 중인 서버의 문제 목록도 바로 바뀐다
   - 새 게임은 출제 문제에서만 뽑고, 저장된 게임은 출제 + 후보 문제 전체에서 id로 찾는다. 그래서 교체 전에 시작한 게임도 원래 문제로 끝난다(재시작 후에도). 문제 id는 재사용하지 않는다
+  - `server/src/teacher/`: 선생님 보고서 계산. `report.ts`(순수 함수, 규칙 원문은 `docs/teacher-mode.md`), `reportData.ts`(DB 읽기), `period.ts`(기간 인자), `fixture.ts`(테스트 데이터). API `GET /api/teacher/report`(`teacherReport.ts`)와 CLI `teacher-report`가 함께 쓴다
   - `server/src/teacherAuth.ts`: 선생님 로그인(`/api/teacher/*`). 세션은 토큰 해시만 DB에 저장, 마지막 요청 후 30분 만료, 2분에 5번 틀리면 429. 선생님 기능 라우트는 이 라우터의 `requireTeacher` 뒤에 붙인다
   - `server/test/`: Supertest API 테스트
 - `shared/`: 클라이언트와 서버가 함께 쓰는 API 타입(`types.ts`)과 닉네임 규칙
@@ -58,6 +60,7 @@
 
 - 공통 규칙(학생 명단 형식, 읽는 데이터, 기간 인자, 대표 값)은 `docs/teacher-mode.md`
 - 학생 명단은 DB에 있다(웹 "학생 명단" 화면, `npm run roster`). 예전 `teacher/roster.json`과 보고서 `teacher/reports/`는 학생 이름이 들어 있어 gitignore 대상이다
+- `/teacher-*` 명령은 값을 직접 계산하지 않고 `npm run -s teacher-report -- <기간> --json` 결과를 쓴다
 - `/teacher-mode [기간] [save] [csv|pdf|both]`가 `teacher-roster` → `teacher-scores` → `teacher-weakness` → `teacher-progress` → `teacher-compare`를 차례로 실행해 보고서를 만들고, 형식을 주면 `/export-report`로 내보낸다
 - `/export-report [csv|pdf|both] [보고서.md]`: 저장된 보고서를 CSV(성적표, Excel용 BOM)와 PDF(헤드리스 Chrome/Edge 인쇄)로 내보낸다
 - 웹 화면 선생님 모드(관리자 인증, 문제 교체)는 #39

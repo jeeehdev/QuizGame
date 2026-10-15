@@ -10,6 +10,8 @@ argument-hint: "[기간: all | today | 7d | 30d | YYYY-MM-DD~YYYY-MM-DD] [save] 
 - `csv`, `pdf`, `both`가 있으면 저장한 보고서를 그 형식으로도 내보낸다. 이때는 `save`가 없어도 저장한다
 - 그 밖의 값이면 시작하지 말고 사용법(`/teacher-mode 7d save`, `/teacher-mode 7d pdf`)을 보여 준다
 
+계산 결과는 1단계에서 `npm run -s teacher-report -- <기간> --json`을 **한 번만** 실행해 얻고, 3~6단계가 모두 그 JSON을 쓴다. 그래야 단계마다 같은 시각 기준의 같은 값이 나오고 웹 성적표와도 같다.
+
 각 단계는 해당 명령 파일(`.claude/commands/<이름>.md`)을 읽고 그 지시를 아래 인자로 그대로 수행한다. 공통 규칙은 `docs/teacher-mode.md`를 따른다. DB는 읽기 전용으로만 열고, 명단과 DB를 바꾸지 않는다.
 
 ## 진행 순서
@@ -19,14 +21,15 @@ argument-hint: "[기간: all | today | 7d | 30d | YYYY-MM-DD~YYYY-MM-DD] [save] 
 1. **준비 점검**
    - `npm run -s roster -- list --json`으로 명단을 읽어 학생이 1명 이상인지 확인한다. 아니면 웹 선생님 화면의 "학생 명단"이나 `/teacher-roster add`, 예전 파일이 있으면 `npm run import-roster -- teacher/roster.json`을 안내하고 **중단**한다
    - DB 파일이 있는지 확인한다. 없으면 중단한다
+   - `npm run -s teacher-report -- <기간> --json`을 실행해 결과를 3~6단계에서 쓴다. 실패하면 오류 원문을 보고하고 중단한다
    - `teacher/`(보고서 폴더)가 `.gitignore`에 있는지 확인한다. 없으면 보고서를 저장하지 않고 경고한다
 2. **명단 점검**: `teacher-roster`의 `unmatched`. 미등록 닉네임이 있으면 보고서 맨 앞에 알리고 계속 진행한다 (명단은 바꾸지 않는다)
 3. **반 성적표**: `teacher-scores` (기간, 정렬 `number`)
 4. **카테고리·문제 약점**: `teacher-weakness` (반 전체, 기간)
 5. **성적 추이**: `teacher-progress` (반 전체, 기간)
 6. **학생 비교**: `teacher-compare`
-   - 대상: 3단계에서 ⚠️로 표시된 학생과 ⭐로 표시된 학생. 합쳐서 2명 미만이면(표시하지 않은 경우 포함) 평균 점수 상위 2명과 하위 2명 (겹치면 한 번만)
-   - 응시한 학생이 2명 미만이면 이 단계를 건너뛰고 이유를 적는다
+   - 대상: 3단계에서 ⚠️로 표시된 학생과 ⭐로 표시된 학생. 합쳐서 2명 미만이면(표시하지 않은 경우 포함) 평균 점수 상위 2명과 하위 2명 (겹치면 한 번만). JSON의 `compare`가 이 규칙으로 고른 결과다(`reason`: flagged, topBottom)
+   - 응시한 학생이 2명 미만이면(`compare`가 `null`) 이 단계를 건너뛰고 `compareSkipped`를 적는다
 7. **보고서 작성**
 
 어느 단계에서 데이터가 없어 결과가 비면(예: 최근 24시간 기록 없음) 그 단계만 "데이터 없음"으로 적고 다음 단계로 간다. 명령 실행 자체가 실패하면(스크립트 오류, 파일을 읽지 못함) 중단하고 실패한 단계와 오류 원문을 보고한다.

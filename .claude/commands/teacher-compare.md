@@ -11,6 +11,14 @@ argument-hint: "<학생...> [기간] (학생은 번호나 이름, 예: 1 2 5 또
 - 학생이 2명 미만이거나 명단에 없는 학생이 있으면 비교하지 말고 알린다
 - 학생을 `all`로 지정하면 응시한 학생 전체를 비교한다 (최대 30명)
 
+## 데이터
+
+먼저 `npm run -s teacher-report -- <기간> --json`으로 명단(`students[]`)을 읽어 이름을 출석 번호로 바꾼 뒤, `npm run -s teacher-report -- <기간> --json --compare <번호,번호,…>`(전체는 `--compare all`)로 비교 결과를 얻는다. 값을 직접 계산하지 않는다 (`docs/teacher-mode.md`의 "계산 결과 얻기").
+
+- 학생별 값은 `students[]`, 비교 결과는 `compare`: 항목별 가장 좋은 학생 `best`(굵게 표시할 값), 20%p 이상 차이 `gaps`, 10점 이내 쌍 `closeScores`, 서로 가르쳐 줄 짝 `teachingPairs`
+- 반 평균 정답률은 `summary.categoryRates`
+- CLI가 오류(명단에 없는 번호, 2명 미만)로 끝나면 그 문장을 그대로 알리고 멈춘다
+
 ## 보여 줄 것
 
 ### 1. 나란히 보기

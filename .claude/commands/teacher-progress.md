@@ -9,6 +9,13 @@ argument-hint: "[학생 (번호나 이름, 생략하면 반 전체)] [기간]"
 - 기간 형식인 값은 기간(기본 `all`), 나머지는 학생 한 명(번호나 이름). 학생이 없으면 반 전체
 - 명단에 없는 학생이면 분석하지 말고 알린다
 
+## 데이터
+
+`npm run -s teacher-report -- <기간> --json`의 결과로 표를 만든다. 값을 직접 계산하거나 DB를 직접 읽지 않는다 (`docs/teacher-mode.md`의 "계산 결과 얻기").
+
+- 학생 한 명: 그 학생의 `records`(시간 순, `change`가 직전 대비, `fast`가 ⏱️), `first`, `recent`, `change`, `categoryChange`
+- 반 전체: `students[]`의 `first`, `recent`, `change`, `best`, `trend`(up 📈, down 📉, flat ➡️, null이면 "-"), 날짜별은 `daily`
+
 ## 학생 한 명일 때
 
 - 그 학생의 모든 완료 기록을 시간 순으로: 회차 | 플레이 시각 | 닉네임 | 점수 | 직전 대비 | 한국사 | 과학 | 지리 | 예술 | 소요 시간 (80초 미만이면 ⏱️)

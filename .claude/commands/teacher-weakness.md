@@ -9,6 +9,14 @@ argument-hint: "[학생 (번호나 이름, 생략하면 반 전체)] [기간]"
 - 기간 형식인 값은 기간(기본 `all`), 나머지는 학생 한 명(번호나 이름). 학생이 없으면 반 전체
 - 명단에 없는 학생이면 분석하지 말고 알린다
 
+## 데이터
+
+`npm run -s teacher-report -- <기간> --json`의 결과로 표를 만든다. 값을 직접 계산하거나 DB를 직접 읽지 않는다 (`docs/teacher-mode.md`의 "계산 결과 얻기").
+
+- 카테고리별: 반 전체는 `summary.categoryRates`와 `summary.below50`, 학생 한 명은 그 학생의 `categoryRates` − `summary.categoryRates`
+- 문제별: `weakness`. 반 전체는 `questions`(오답률 상위 10개, `reteach`가 다시 가르칠 내용 후보)와 `tiedQuestionIds`, 학생 한 명은 `wrongByStudent[학생 id]`(문제 내용은 `questions.json`·`question-candidates.json`에서 id로 찾는다)
+- ⏱️는 `weakness.fastStudentIds`, 대상 학생이 없으면(`weakness.studentIds`가 비면) "최근 24시간 기록이 없어…" 문장을 쓴다
+
 ## 보여 줄 것
 
 ### 1. 카테고리별 약점 (`scores`, 기간 적용)

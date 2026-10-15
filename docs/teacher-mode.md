@@ -2,6 +2,30 @@
 
 `.claude/commands/teacher-*.md` 명령과 웹 선생님 화면이 함께 따르는 규칙입니다.
 
+계산은 `server/src/teacher/`(`report.ts`)에 한 번만 구현되어 있고, 웹 화면(`GET /api/teacher/report`)과 명령(`npm run teacher-report`)이 같은 결과를 씁니다. 이 문서는 그 코드의 규칙 원문이므로, 규칙을 바꾸면 코드와 `report.test.ts`도 함께 바꿉니다.
+
+## 계산 결과 얻기 (`npm run teacher-report`)
+
+```sh
+npm run -s teacher-report -- [기간] --json [--compare 1,3,5|all]
+```
+
+- DB(`DB_PATH`, 없으면 `server/data/quiz.sqlite`)를 읽기 전용으로 열어 `TeacherReport`(`shared/types.ts`) JSON을 출력한다. `--json` 없이 실행하면 요약 표를 글로 보여 준다
+- `/teacher-*` 명령은 **값을 직접 계산하지 않고** 이 JSON을 그대로 쓴다. 명령이 하는 일은 고르고, 표로 만들고, 정리 문장을 쓰는 것이다
+- 기간 형식이 틀리거나 명단에 없는 번호를 `--compare`에 주면 오류 문장을 출력하고 종료 코드 1로 끝난다. 그 문장을 그대로 보여 준다
+- 정답률·평균은 반올림하지 않은 값이다. 보여 줄 때 반올림한다 (비율은 소수점 없이 %)
+
+| JSON | 내용 |
+| --- | --- |
+| `period` | `key`, `label`(예: "최근 7일 (2026-10-09~2026-10-15)"), `from`·`to`(UTC) |
+| `summary` | 학생 수·응시 수·기록 수, 미등록 기록 수, 최근 24시간 중간에 나간 게임 수, 반 평균·표준편차·중앙값·최고·최저, 반 최고 기록, 점수 구간, 빠른 기록 수와 주의(`fastWarning`), 등급별 학생 수와 등급을 매겼는지(`gradesAssigned`), ⚠️⭐를 쓰는지(`flagsShown`), 반 카테고리 정답률, 카테고리별 50% 미만 학생(`below50`) |
+| `students[]` | 명단 순서(번호 순)로 모든 학생. 대표 값, 반 평균 대비, 카테고리 정답률, 강한·약한 카테고리(네 개 모두면 차이 없음), 순위·등급·⚠️⭐(`flag`), 추이(`first`, `change`, `trend`, `categoryChange`), 기록 목록(`records`, 직전 대비와 ⏱️ 포함). `playCount`가 0이면 미응시 |
+| `daily[]` | 날짜별(로컬) 반 평균과 응시 학생 수, 최근 14개 날짜 |
+| `weakness` | 최근 24시간 문제별 분석: 대상 학생, ⏱️ 학생(`fastStudentIds`), 오답률 상위 10문제(`questions`), 같은 오답률로 넘친 문제(`tiedQuestionIds`), 학생별로 틀린 문제(`wrongByStudent`) |
+| `compare` | 비교 대상(`studentIds`, 고른 이유 `reason`), 항목별 가장 좋은 학생(`best`), 20%p 이상 차이(`gaps`), 10점 이내 쌍과 시간 차이(`closeScores`), 서로 가르쳐 줄 짝(`teachingPairs`). 비교할 수 없으면 `null`과 이유(`compareSkipped`) |
+
+학생 id는 `students[].id`이고, 명령에서 학생을 가리킬 때는 `number`(출석 번호)를 쓴다.
+
 ## 학생 명단 (DB)
 
 게임은 닉네임만 받으므로, 같은 학생이 여러 닉네임을 쓰면 다른 사람으로 보입니다. 명단에서 학생마다 닉네임을 묶어 줍니다. 명단은 DB(`teacher_settings`, `students`, `student_nicknames` 테이블)에 있고, 웹 선생님 화면의 "학생 명단"이나 CLI로 관리합니다.
@@ -20,7 +44,8 @@
 ## 데이터 읽기
 
 - DB 경로: 환경 변수 `DB_PATH`, 없으면 `server/data/quiz.sqlite`
-- **읽기 전용으로만 연다**: `better-sqlite3`로 `new Database(path, { readonly: true, fileMustExist: true })`. `openDb`는 테이블을 만들므로 쓰지 않는다. 일회용 스크립트는 scratchpad에 만들어 `node`로 실행한다
+- **읽기 전용으로만 연다**: `better-sqlite3`로 `new Database(path, { readonly: true, fileMustExist: true })`. `openDb`는 테이블을 만들므로 쓰지 않는다. `npm run teacher-report`가 이렇게 연다
+- 아래 표와 SQL은 계산 코드(`reportData.ts`)가 읽는 데이터를 설명한다. 명령은 직접 쿼리하지 않고 `npm run teacher-report`를 쓴다
 - 선생님 모드 명령은 DB를 절대 바꾸지 않는다. 기록 삭제는 `/quiz-leaderboard delete`로 한다
 
 | 데이터 | 테이블 | 보관 기간 | 쓰는 곳 |
@@ -48,7 +73,7 @@ SELECT g.score_id, g.nickname, g.answers FROM games g WHERE g.finished = 1 AND g
 
 모든 명령이 같은 형식을 받는다. 비어 있으면 `all`.
 
-- `all`: 전체, `today`: 오늘, `7d`·`30d`: 최근 N일, `2026-10-01~2026-10-14`: 날짜 범위(양 끝 포함)
+- `all`: 전체, `today`: 오늘, `7d`·`30d`: 오늘을 포함한 최근 N일(달력 날짜, 예: 10월 15일의 `7d`는 10월 9일 0시부터), `2026-10-01~2026-10-14`: 날짜 범위(양 끝 포함)
 - 날짜는 로컬 시간 기준으로 자르고, `played_at`(UTC ISO 문자열)과 비교할 때 UTC로 바꾼다
 - 그 밖의 값이면 계산하지 말고 쓸 수 있는 형식을 보여 준다
 
@@ -62,6 +87,9 @@ SELECT g.score_id, g.nickname, g.answers FROM games g WHERE g.finished = 1 AND g
 - **카테고리별 정답률**: 모든 완료 기록의 카테고리별 맞힌 수 합 ÷ (기록 수 × 10)
 - 기록이 없는 학생은 "미응시"로 표시한다
 - **반 평균**은 응시한 학생들의 평균 점수의 평균, **표준편차**는 같은 값들의 모집단 표준편차다
+- **반 카테고리 정답률**도 같은 방식으로 응시한 학생들의 카테고리 정답률의 평균이다 (많이 푼 학생이 반 값을 끌고 가지 않게)
+- **날짜별 반 평균**은 그날(로컬 날짜) 응시한 학생마다 그날 기록의 평균을 구한 뒤 그 값들의 평균이다
+- **추이**의 처음·최근 비교는 기간 안 기록으로 한다: 기록이 4건 이상이면 처음 2건과 최근 2건, 2~3건이면 처음 1건과 최근 1건
 
 ## 빠른 기록 (⏱️)
 

@@ -9,6 +9,14 @@ argument-hint: "[기간: all | today | 7d | 30d | YYYY-MM-DD~YYYY-MM-DD] [정렬
 - 첫 번째 값은 기간(기본 `all`), 두 번째 값은 정렬(기본 `number`)
 - 정렬: `number` 출석 번호, `grade` 등급, `best` 최고 점수, `avg` 평균 점수, `recent` 최근 점수 (점수 정렬은 높은 순, 같으면 번호 순)
 
+## 데이터
+
+`npm run -s teacher-report -- <기간> --json`의 결과(`TeacherReport`)로 표를 만든다. 값을 직접 계산하거나 DB를 직접 읽지 않는다 (`docs/teacher-mode.md`의 "계산 결과 얻기"). 정렬만 이 명령에서 한다.
+
+- 반 요약은 `summary`, 학생별 성적표는 `students[]`(`rank`, `grade`, `flag`, `vsClass`, `categoryRates`, `fastCount`/`playCount`)
+- 등급을 매기지 않았으면(`gradesAssigned: false`) 등급 열은 "-"로 두고 이유를 쓴다. `flagsShown: false`이면 표준편차와 ⚠️⭐를 쓰지 않는다
+- 미등록 기록 수는 `summary.unmatchedRecordCount`
+
 ## 보여 줄 것
 
 ### 1. 반 요약

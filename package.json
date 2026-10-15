@@ -18,6 +18,7 @@
     "delete-score": "node server/src/scripts/delete-score.ts",
     "swap-question": "node server/src/scripts/swap-question.ts",
     "teacher-fixture": "node server/src/scripts/teacher-fixture.ts",
+    "teacher-report": "node server/src/scripts/teacher-report.ts",
     "roster": "node server/src/scripts/roster.ts",
     "import-roster": "node server/src/scripts/roster.ts import"
   },

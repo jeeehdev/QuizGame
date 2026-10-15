@@ -26,6 +26,7 @@ import { checkNickname } from './nicknameFilter.ts'
 import { getLeaderboard, getRank, insertScore } from './scoreQueries.ts'
 import { createTeacherRouter } from './teacherAuth.ts'
 import { createTeacherQuestionsRouter, type QuestionFiles } from './teacherQuestions.ts'
+import { createTeacherReportRouter } from './teacherReport.ts'
 import { createTeacherRosterRouter } from './teacherRoster.ts'
 
 export const LEADERBOARD_DEFAULT_LIMIT = 10
@@ -169,6 +170,7 @@ export function createApp({
   if (teacherPassword !== undefined) {
     const teacher = createTeacherRouter({ db, password: teacherPassword, now, secureCookies })
     teacher.use(createTeacherRosterRouter({ db }))
+    teacher.use(createTeacherReportRouter({ db, now, questions: () => known }))
     if (questionFiles) {
       teacher.use(
         createTeacherQuestionsRouter({
