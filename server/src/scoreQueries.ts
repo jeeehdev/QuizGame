@@ -45,6 +45,12 @@ export function insertScore(db: Db, result: GameResult, playedAt: Date): number 
   return Number(info.lastInsertRowid)
 }
 
+/** Keeps the per-question results of a finished game with its score (score_answers). */
+export function insertScoreAnswers(db: Db, scoreId: number, answers: { questionId: string; correct: boolean }[]): void {
+  const insert = db.prepare('INSERT INTO score_answers (score_id, position, question_id, correct) VALUES (?, ?, ?, ?)')
+  answers.forEach((a, i) => insert.run(scoreId, i, a.questionId, a.correct ? 1 : 0))
+}
+
 export function getLeaderboard(db: Db, limit: number): LeaderboardEntry[] {
   const rows = db.prepare(`${RANKED_SCORES} ORDER BY ${LIST_ORDER} LIMIT ?`).all(limit) as RankedRow[]
   return rows.map(toEntry)

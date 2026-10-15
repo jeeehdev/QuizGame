@@ -107,12 +107,13 @@ describe('teacher report on the teacher-fixture data', () => {
     ])
   })
 
-  it('analyses questions from the latest game of each student in the last 24 hours', () => {
+  it('analyses questions from the latest game of each student in the period', () => {
     const w = report.weakness
-    expect(namesOf(report, w.studentIds)).toEqual(['김민수', '이서연', '박지훈', '최유나', '강하은', '윤서준'])
+    expect(namesOf(report, w.studentIds)).toEqual(['김민수', '이서연', '박지훈', '최유나', '강하은', '윤서준', '한지민'])
+    expect(w.recordsWithoutAnswers).toBe(0)
     expect(w.questions).toHaveLength(10)
     const geo01 = w.questions.find((q) => q.questionId === 'geo-01')!
-    expect(geo01).toMatchObject({ difficulty: 'easy', solvedBy: 6, wrongBy: 5, reteach: true })
+    expect(geo01).toMatchObject({ difficulty: 'easy', solvedBy: 7, wrongBy: 5, reteach: true })
     expect(namesOf(report, geo01.wrongStudentIds)).not.toContain('이서연')
     expect(w.questions.find((q) => q.questionId === 'hist-01')).toMatchObject({ wrongBy: 5, reteach: true })
     expect(w.tiedQuestionIds.length).toBeGreaterThan(0)
@@ -139,8 +140,9 @@ describe('teacher report on the teacher-fixture data', () => {
     const today = fixtureReport('today')
     expect(today.summary).toMatchObject({ playedCount: 6, recordCount: 6, unmatchedRecordCount: 2, average: 250 })
     expect(byName(today).get('김민수')).toMatchObject({ playCount: 1, trend: null })
-    // Per-question analysis always uses the last 24 hours.
-    expect(today.weakness.studentIds).toEqual(report.weakness.studentIds)
+    // 한지민 played two days ago, so her answers are out of today's analysis.
+    expect(namesOf(today, today.weakness.studentIds)).toEqual(['김민수', '이서연', '박지훈', '최유나', '강하은', '윤서준'])
+    expect(today.weakness.questions.find((q) => q.questionId === 'geo-01')).toMatchObject({ solvedBy: 6, wrongBy: 5 })
 
     const week = fixtureReport('7d')
     expect(byName(week).get('김민수')).toMatchObject({ playCount: 2, first: 280 })
@@ -178,7 +180,7 @@ function classInput(scoresByStudent: InputScore[][], extra: Partial<ReportInput>
     now: NOW,
     students: scoresByStudent.map((_, i) => ({ id: i + 1, number: i + 1, name: `학생${i + 1}`, nicknames: [`s${i + 1}`] })),
     scores: scoresByStudent.flat(),
-    recentGames: [],
+    answeredGames: [],
     abandonedNicknames: [],
     questions: new Map<string, QuizQuestion>(),
     ...extra,
@@ -266,7 +268,7 @@ describe('per-question analysis', () => {
   })
   const input = (games: ReturnType<typeof game>[]) =>
     classInput([[score('s1', 100)], [score('s2', 100)], [score('s3', 100)]], {
-      recentGames: games,
+      answeredGames: games,
       questions: new Map([easy, hard].map((q) => [q.id, q])),
     })
 
@@ -281,6 +283,8 @@ describe('per-question analysis', () => {
     ])
     expect(report.weakness.questions[1]).toMatchObject({ answer: '나', wrongStudentIds: [2, 3] })
     expect(report.weakness.wrongByStudent[1]).toEqual(['q-hard'])
+    // The three roster scores in the input have no answers of their own.
+    expect(report.weakness.recordsWithoutAnswers).toBe(3)
     expect(Object.keys(report.weakness.questionDetails).sort()).toEqual(['q-easy', 'q-hard'])
   })
 

@@ -1,7 +1,7 @@
 import { useId, useState } from 'react'
 import { CATEGORIES, CATEGORY_LABELS, type TeacherReport } from '../types/quiz'
 import { NoRecords } from './ReportFrame'
-import { DIFFICULTY_LABELS, localTime, percent, signed, studentName } from './format'
+import { DIFFICULTY_LABELS, percent, signed, studentName } from './format'
 import styles from './Teacher.module.css'
 
 /** 약점: category rates for the period, and the most missed questions from the last 24 hours. */
@@ -109,11 +109,12 @@ export function WeaknessScreen({ report }: { report: TeacherReport }) {
           많이 틀린 문제
         </h2>
         <p className={styles.help}>
-          문제별 답안은 24시간만 보관되므로, 기간과 상관없이 최근 24시간({localTime(w.since)} 이후)에 끝낸 게임만 씁니다. 여러 번 푼
-          학생은 가장 최근 게임 하나만 셉니다.
+          기간 안의 게임으로 셉니다. 여러 번 푼 학생은 가장 최근 게임 하나만 셉니다.
+          {w.recordsWithoutAnswers > 0 &&
+            ` 문제별 답안을 보관하기 전에 끝난 기록 ${w.recordsWithoutAnswers}건은 문제별 분석에 들어가지 않습니다.`}
         </p>
         {w.studentIds.length === 0 ? (
-          <p className={styles.empty}>최근 24시간 기록이 없어 문제별 분석을 할 수 없습니다.</p>
+          <p className={styles.empty}>기간 안에 문제별 답안이 있는 기록이 없어 문제별 분석을 할 수 없습니다.</p>
         ) : student ? (
           <StudentWrongQuestions report={report} studentId={student.id} />
         ) : (
@@ -180,7 +181,7 @@ export function WeaknessScreen({ report }: { report: TeacherReport }) {
 function StudentWrongQuestions({ report, studentId }: { report: TeacherReport; studentId: number }) {
   const student = report.students.find((s) => s.id === studentId)!
   const wrong = report.weakness.wrongByStudent[studentId]
-  if (!wrong) return <p className={styles.empty}>{studentName(student)} 학생은 최근 24시간에 끝낸 게임이 없습니다.</p>
+  if (!wrong) return <p className={styles.empty}>{studentName(student)} 학생은 기간 안에 문제별 답안이 있는 게임이 없습니다.</p>
   if (wrong.length === 0) return <p className={styles.empty}>{studentName(student)} 학생은 최근 게임에서 모두 맞혔습니다.</p>
   return (
     <div className={styles.tableWrap} role="region" aria-labelledby="weak-student-questions" tabIndex={0}>

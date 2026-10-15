@@ -166,7 +166,7 @@ describe('약점', () => {
     expect(cells(bodyRows(/반 전체 카테고리별 정답률/)[0])[2]).toBe('2명: 3 박지훈, 7 윤서준')
     const geo01 = bodyRows(/오답률이 높은 문제 10개/).find((r) => cells(r)[0] === 'geo-01')!
     expect(geo01.textContent).toMatch(/다시 가르칠 내용/)
-    expect(cells(geo01).slice(5)).toEqual(['83% (5/6명)', '김민수, 박지훈, 최유나, 강하은, 윤서준'])
+    expect(cells(geo01).slice(5)).toEqual(['71% (5/7명)', '김민수, 박지훈, 최유나, 강하은, 윤서준'])
     expect(screen.getByText(/표에 넣지 못한 같은 오답률의 문제: hist-09, hist-10, sci-07, sci-08/)).toBeTruthy()
   })
 

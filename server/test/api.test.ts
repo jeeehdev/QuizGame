@@ -1,3 +1,6 @@
+import { mkdtempSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import request from 'supertest'
 import { beforeEach, describe, expect, it } from 'vitest'
 import type { CreateGameResponse, FinishResponse, LeaderboardResponse } from '../../shared/types.ts'
@@ -203,6 +206,47 @@ describe('POST /api/games/:id/finish', () => {
     const again = await request(app).post(`/api/games/${game.gameId}/finish`).expect(200)
     expect(again.body).toEqual(finish)
     expect((await request(app).get('/api/leaderboard')).body.entries).toHaveLength(1)
+  })
+
+  it('keeps the per-question results with the score, and deletes them with it', async () => {
+    const { game, finish } = await playGame('보관', 25, 1)
+    await request(app).post(`/api/games/${game.gameId}/finish`).expect(200)
+    const rows = db.prepare('SELECT position, question_id, correct FROM score_answers WHERE score_id = ? ORDER BY position').all(finish.scoreId) as {
+      position: number
+      question_id: string
+      correct: number
+    }[]
+    expect(rows.map((r) => r.question_id)).toEqual(game.questions.map((q) => q.id))
+    expect(rows.map((r) => r.correct === 1)).toEqual(finish.result.records.map((r) => r.correct))
+    // Long after the game row is cleaned up, the answers stay with the score.
+    clock += GAME_TTL_MS + 1
+    deleteExpiredGames(db, clock)
+    expect(db.prepare('SELECT COUNT(*) AS n FROM score_answers').get()).toEqual({ n: 40 })
+    deleteScore(db, finish.scoreId)
+    expect(db.prepare('SELECT COUNT(*) AS n FROM score_answers').get()).toEqual({ n: 0 })
+  })
+
+  it('copies answers of games finished before answers were kept when the database opens', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'quiz-answers-'))
+    const path = join(dir, 'quiz.sqlite')
+    try {
+      db = openDb(path)
+      app = createApp({ db, questions, bannedWords, random: seededRandom(1), now: () => clock })
+      const { finish } = await playGame('예전', 30, 1)
+      db.prepare('DELETE FROM score_answers').run() // as if finished by the previous server version
+      db.close()
+      db = openDb(path)
+      const rows = db.prepare('SELECT correct FROM score_answers WHERE score_id = ?').all(finish.scoreId) as { correct: number }[]
+      expect(rows).toHaveLength(40)
+      expect(rows.filter((r) => r.correct === 1)).toHaveLength(30)
+      db.close()
+      db = openDb(path) // opening again copies nothing twice
+      expect(db.prepare('SELECT COUNT(*) AS n FROM score_answers').get()).toEqual({ n: 40 })
+    } finally {
+      db.close()
+      rmSync(dir, { recursive: true, force: true })
+      db = openDb(':memory:')
+    }
   })
 
   it('rejects answers after the game is complete', async () => {

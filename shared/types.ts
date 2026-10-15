@@ -327,10 +327,11 @@ export interface ReportWrongQuestion {
   reteach: boolean
 }
 
-/** Per-question analysis from the last 24 hours, whatever the period. One game per student: their latest. */
+/** Per-question analysis over the period. One game per student: their latest game that has per-question answers. */
 export interface ReportWeakness {
-  since: string
-  /** Students with a finished game in the last 24 hours. */
+  /** Roster students' records in the period without per-question answers (finished before answers were kept). */
+  recordsWithoutAnswers: number
+  /** Students with a game in the period that has answers. */
   studentIds: number[]
   /** Students whose latest game there is fast (⏱️ next to their name). */
   fastStudentIds: number[]

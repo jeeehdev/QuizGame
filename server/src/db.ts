@@ -35,6 +35,16 @@ export function openDb(path: string): Db {
     );
     CREATE INDEX IF NOT EXISTS games_started_at ON games (started_at);
 
+    -- Per-question results of a finished game, kept as long as its score (deleted with it).
+    -- Only what the teacher's weakness analysis needs: no chosen choice, no timestamps.
+    CREATE TABLE IF NOT EXISTS score_answers (
+      score_id    INTEGER NOT NULL REFERENCES scores (id) ON DELETE CASCADE,
+      position    INTEGER NOT NULL,             -- 0-based order in which the question was asked
+      question_id TEXT    NOT NULL,
+      correct     INTEGER NOT NULL CHECK (correct IN (0, 1)),
+      PRIMARY KEY (score_id, position)
+    );
+
     -- Teacher login sessions. Only a SHA-256 hash of the cookie token is stored, never the token itself.
     -- expires_at moves forward on every teacher request (idle timeout); expired rows are deleted by cleanup.
     CREATE TABLE IF NOT EXISTS teacher_sessions (
@@ -61,6 +71,15 @@ export function openDb(path: string): Db {
       student_id INTEGER NOT NULL REFERENCES students (id) ON DELETE CASCADE
     );
     CREATE INDEX IF NOT EXISTS student_nicknames_student ON student_nicknames (student_id);
+  `)
+  // Games finished before score_answers existed still have their answers in games for 24 hours; copy them once.
+  db.exec(`
+    INSERT OR IGNORE INTO score_answers (score_id, position, question_id, correct)
+    SELECT g.score_id, CAST(a.key AS INTEGER), json_extract(a.value, '$.questionId'),
+           CASE WHEN json_extract(a.value, '$.correct') THEN 1 ELSE 0 END
+    FROM games g, json_each(g.answers) a
+    WHERE g.finished = 1 AND g.score_id IN (SELECT id FROM scores)
+      AND NOT EXISTS (SELECT 1 FROM score_answers s WHERE s.score_id = g.score_id)
   `)
   return db
 }

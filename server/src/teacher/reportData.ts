@@ -2,7 +2,10 @@
 import type { QuizQuestion, ReportPeriod, TeacherReport } from '../../../shared/types.ts'
 import type { Db } from '../db.ts'
 import { getClassName, listStudents } from '../roster.ts'
-import { buildReport, RECENT_ANSWERS_MS, type CompareRequest, type InputGame, type InputScore, type ReportInput } from './report.ts'
+import { buildReport, ABANDONED_WINDOW_MS, type CompareRequest, type InputGame, type InputScore, type ReportInput } from './report.ts'
+
+/** Upper bound for `all`: sorts after every played_at ISO string. */
+const AFTER_ANY_DATE = String.fromCharCode(0xffff)
 
 interface ScoreRow {
   id: number
@@ -24,7 +27,7 @@ export function loadReportInput(
       `SELECT id, nickname, score, correct_by_category, duration_sec, played_at FROM scores
        WHERE played_at >= ? AND played_at < ? ORDER BY played_at, id`,
     )
-    .all(period.from ?? '', period.to ?? '￿') as ScoreRow[]
+    .all(period.from ?? '', period.to ?? AFTER_ANY_DATE) as ScoreRow[]
   const scores: InputScore[] = rows.map((r) => ({
     id: r.id,
     nickname: r.nickname,
@@ -34,25 +37,26 @@ export function loadReportInput(
     playedAt: r.played_at,
   }))
 
-  // games rows are deleted 24 hours after they start, but cleanup runs hourly, so the cut is applied here too.
-  const since = now - RECENT_ANSWERS_MS
-  const games = db
+  // Per-question answers of the same records, grouped by record in the order asked.
+  const answerRows = db
     .prepare(
-      `SELECT g.score_id, s.nickname, s.played_at, s.duration_sec, g.answers FROM games g
-       JOIN scores s ON s.id = g.score_id
-       WHERE g.finished = 1 AND g.started_at >= ?`,
+      `SELECT a.score_id, a.question_id, a.correct FROM score_answers a
+       JOIN scores s ON s.id = a.score_id
+       WHERE s.played_at >= ? AND s.played_at < ? ORDER BY a.score_id, a.position`,
     )
-    .all(since) as { score_id: number; nickname: string; played_at: string; duration_sec: number; answers: string }[]
-  const recentGames: InputGame[] = games.map((g) => ({
-    scoreId: g.score_id,
-    nickname: g.nickname,
-    playedAt: g.played_at,
-    durationSec: g.duration_sec,
-    answers: (JSON.parse(g.answers) as { questionId: string; correct: boolean }[]).map(({ questionId, correct }) => ({
-      questionId,
-      correct,
-    })),
-  }))
+    .all(period.from ?? '', period.to ?? AFTER_ANY_DATE) as { score_id: number; question_id: string; correct: number }[]
+  const answersByScore = new Map<number, { questionId: string; correct: boolean }[]>()
+  for (const row of answerRows) {
+    const list = answersByScore.get(row.score_id) ?? []
+    list.push({ questionId: row.question_id, correct: row.correct === 1 })
+    answersByScore.set(row.score_id, list)
+  }
+  const answeredGames: InputGame[] = scores
+    .filter((s) => answersByScore.has(s.id))
+    .map((s) => ({ scoreId: s.id, nickname: s.nickname, playedAt: s.playedAt, durationSec: s.durationSec, answers: answersByScore.get(s.id)! }))
+
+  // games rows are deleted 24 hours after they start, but cleanup runs hourly, so the cut is applied here too.
+  const since = now - ABANDONED_WINDOW_MS
   const abandoned = db
     .prepare('SELECT nickname FROM games WHERE finished = 0 AND started_at >= ?')
     .all(since) as { nickname: string }[]
@@ -63,7 +67,7 @@ export function loadReportInput(
     now,
     students: listStudents(db).map(({ id, number, name, nicknames }) => ({ id, number, name, nicknames })),
     scores,
-    recentGames,
+    answeredGames,
     abandonedNicknames: abandoned.map((g) => g.nickname),
     questions,
   }

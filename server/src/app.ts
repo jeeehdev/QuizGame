@@ -23,7 +23,7 @@ import type { RandomFn } from './game/shuffle.ts'
 import type { Question, StoredAnswer } from './game/types.ts'
 import { insertGame, loadGame, markFinished, saveAnswers } from './gameStore.ts'
 import { checkNickname } from './nicknameFilter.ts'
-import { getLeaderboard, getRank, insertScore } from './scoreQueries.ts'
+import { getLeaderboard, getRank, insertScore, insertScoreAnswers } from './scoreQueries.ts'
 import { createTeacherRouter } from './teacherAuth.ts'
 import { createTeacherQuestionsRouter, type QuestionFiles } from './teacherQuestions.ts'
 import { createTeacherReportRouter } from './teacherReport.ts'
@@ -146,6 +146,7 @@ export function createApp({
       let scoreId = game.scoreId
       if (!game.finished) {
         scoreId = insertScore(db, result, new Date(now()))
+        insertScoreAnswers(db, scoreId, game.state.answers)
         markFinished(db, game.id, scoreId)
       }
       const rank = scoreId === null ? null : getRank(db, scoreId)

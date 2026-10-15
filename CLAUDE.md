@@ -26,6 +26,7 @@
   - `server/src/roster.ts`: 학생 명단(반 이름, 학생, 학생별 닉네임) DB 함수와 검증. 선생님 API(`teacherRoster.ts`)와 CLI(`scripts/roster.ts`)가 함께 쓴다
   - `server/src/teacherQuestions.ts`: 선생님 API `GET /api/teacher/questions`, `POST /api/teacher/swap`. 교체하면 실행 중인 서버의 문제 목록도 바로 바뀐다
   - 새 게임은 출제 문제에서만 뽑고, 저장된 게임은 출제 + 후보 문제 전체에서 id로 찾는다. 그래서 교체 전에 시작한 게임도 원래 문제로 끝난다(재시작 후에도). 문제 id는 재사용하지 않는다
+  - 완료 기록의 문제별 결과는 `score_answers`에 기록과 같이 보관한다(기록을 지우면 함께 지워짐). 진행 중 게임(`games`)은 24시간 뒤 지운다
   - `server/src/teacher/`: 선생님 보고서 계산. `report.ts`(순수 함수, 규칙 원문은 `docs/teacher-mode.md`), `reportData.ts`(DB 읽기), `period.ts`(기간 인자), `fixture.ts`(테스트 데이터). API `GET /api/teacher/report`(`teacherReport.ts`)와 CLI `teacher-report`가 함께 쓴다
   - `server/src/teacherAuth.ts`: 선생님 로그인(`/api/teacher/*`). 세션은 토큰 해시만 DB에 저장, 마지막 요청 후 30분 만료, 2분에 5번 틀리면 429. 선생님 기능 라우트는 이 라우터의 `requireTeacher` 뒤에 붙인다
   - `server/test/`: Supertest API 테스트

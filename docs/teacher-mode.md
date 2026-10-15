@@ -21,7 +21,7 @@ npm run -s teacher-report -- [기간] --json [--compare 1,3,5|all]
 | `summary` | 학생 수·응시 수·기록 수, 미등록 기록 수, 최근 24시간 중간에 나간 게임 수, 반 평균·표준편차·중앙값·최고·최저, 반 최고 기록, 점수 구간, 빠른 기록 수와 주의(`fastWarning`), 등급별 학생 수와 등급을 매겼는지(`gradesAssigned`), ⚠️⭐를 쓰는지(`flagsShown`), 반 카테고리 정답률, 카테고리별 50% 미만 학생(`below50`) |
 | `students[]` | 명단 순서(번호 순)로 모든 학생. 대표 값, 반 평균 대비, 카테고리 정답률, 강한·약한 카테고리(네 개 모두면 차이 없음), 순위·등급·⚠️⭐(`flag`), 추이(`first`, `change`, `trend`, `categoryChange`), 기록 목록(`records`, 직전 대비와 ⏱️ 포함). `playCount`가 0이면 미응시 |
 | `daily[]` | 날짜별(로컬) 반 평균과 응시 학생 수, 최근 14개 날짜 |
-| `weakness` | 최근 24시간 문제별 분석: 대상 학생, ⏱️ 학생(`fastStudentIds`), 오답률 상위 10문제(`questions`), 같은 오답률로 넘친 문제(`tiedQuestionIds`), 학생별로 틀린 문제(`wrongByStudent`) |
+| `weakness` | 기간 안 문제별 분석: 대상 학생, 답안이 없는 예전 기록 수(`recordsWithoutAnswers`), ⏱️ 학생(`fastStudentIds`), 오답률 상위 10문제(`questions`), 같은 오답률로 넘친 문제(`tiedQuestionIds`), 학생별로 틀린 문제(`wrongByStudent`) |
 | `compare` | 비교 대상(`studentIds`, 고른 이유 `reason`), 항목별 가장 좋은 학생(`best`), 20%p 이상 차이(`gaps`), 10점 이내 쌍과 시간 차이(`closeScores`), 서로 가르쳐 줄 짝(`teachingPairs`). 비교할 수 없으면 `null`과 이유(`compareSkipped`) |
 
 학생 id는 `students[].id`이고, 명령에서 학생을 가리킬 때는 `number`(출석 번호)를 쓴다.
@@ -51,7 +51,7 @@ npm run -s teacher-report -- [기간] --json [--compare 1,3,5|all]
 | 데이터 | 테이블 | 보관 기간 | 쓰는 곳 |
 | --- | --- | --- | --- |
 | 점수, 카테고리별 맞힌 수, 소요 시간, 플레이 시각 | `scores` | 계속 | 성적표, 비교, 추이 |
-| 문제별 답안(맞았는지) | `games.answers` (`games.score_id`로 `scores.id`와 연결) | 시작 후 24시간 | 문제별 약점 |
+| 문제별 답안(맞았는지) | `score_answers` (`score_id`로 `scores.id`와 연결) | 그 기록과 같이 (기록을 지우면 함께 지워짐) | 문제별 약점 |
 | 중간에 나간 게임 | `games` (`finished = 0`) | 시작 후 24시간 | 참여 현황 |
 
 ```sql
@@ -59,13 +59,16 @@ npm run -s teacher-report -- [기간] --json [--compare 1,3,5|all]
 SELECT id, nickname, score, correct_by_category, duration_sec, played_at
 FROM scores WHERE played_at >= ? AND played_at < ? ORDER BY played_at;
 
--- 최근 24시간 완료 게임의 문제별 답안
-SELECT g.score_id, g.nickname, g.answers FROM games g WHERE g.finished = 1 AND g.score_id IS NOT NULL;
+-- 기간 안 기록의 문제별 답안 (position은 출제 순서)
+SELECT a.score_id, a.question_id, a.correct FROM score_answers a
+JOIN scores s ON s.id = a.score_id
+WHERE s.played_at >= ? AND s.played_at < ? ORDER BY a.score_id, a.position;
 ```
 
 - `correct_by_category`는 JSON(`{"history":2,"science":3,"geography":4,"arts":3}`), 카테고리마다 10문제, 점수는 맞힌 수 × 10 (400점 만점)
-- `answers`는 JSON 배열(`questionId`, `correct`). 문제 내용은 `server/data/questions.json`과 `question-candidates.json`에서 id로 찾는다
-- 문제별 답안은 **학생 단위로 센다**: 한 학생이 최근 24시간 안에 여러 번 완료했으면 그 학생의 **가장 최근 완료 게임 하나만** 쓴다. 게임 수로 세면 여러 번 푼 학생이 여러 명처럼 세진다
+- `score_answers`는 기록마다 40줄(`question_id`, `correct` 0/1). 문제별 답안을 보관하기 전(#50)에 끝난 기록에는 없다. 문제 내용은 `server/data/questions.json`과 `question-candidates.json`에서 id로 찾는다
+- 문제별 답안은 **학생 단위로 센다**: 한 학생이 기간 안에 여러 번 완료했으면 그 학생의 **답안이 있는 가장 최근 게임 하나만** 쓴다. 게임 수로 세면 여러 번 푼 학생이 여러 명처럼 세진다
+- 답안이 없는 예전 기록은 문제별 분석에서만 빠지고, 몇 건인지 함께 보여 준다
 - 중간에 나간 게임도 명단 학생의 것만 센다 (`games.nickname`을 `student_nicknames`로 찾는다)
 - 카테고리 이름: history 한국사, science 과학, geography 지리, arts 예술과 문화
 

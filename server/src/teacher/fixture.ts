@@ -5,6 +5,7 @@ import { CATEGORIES } from '../../../shared/types.ts'
 import type { Db } from '../db.ts'
 import type { Question } from '../game/types.ts'
 import { importRoster } from '../roster.ts'
+import { insertScoreAnswers } from '../scoreQueries.ts'
 
 export const FIXTURE_ROSTER = {
   className: '3학년 2반',
@@ -67,12 +68,13 @@ export function buildTeacherFixture(db: Db, bank: Question[], now: number) {
         insertScore.run(nickname, score, JSON.stringify(byCategory), durationSec, new Date(playedAt).toISOString())
           .lastInsertRowid,
       )
-      // Per-question answers only exist for games started in the last 24 hours, as on the real server.
+      const startedAt = playedAt - durationSec * 1000
+      const answers = CATEGORIES.flatMap((c, i) =>
+        order[c].map((questionId, j) => ({ questionId, choiceIndex: 0, correct: j < counts[i], answeredAt: startedAt })),
+      )
+      insertScoreAnswers(db, scoreId, answers)
+      // games rows only exist for games started in the last 24 hours, as on the real server.
       if (hoursAgo < 24) {
-        const startedAt = playedAt - durationSec * 1000
-        const answers = CATEGORIES.flatMap((c, i) =>
-          order[c].map((questionId, j) => ({ questionId, choiceIndex: 0, correct: j < counts[i], answeredAt: startedAt })),
-        )
         const plan = answers.map((a) => ({ questionId: a.questionId, choiceOrder: [0, 1, 2, 3] }))
         insertGame.run(randomUUID(), nickname, JSON.stringify(plan), JSON.stringify(answers), startedAt, scoreId, 1)
       }

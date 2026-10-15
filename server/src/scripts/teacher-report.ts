@@ -99,9 +99,10 @@ function printText(r: TeacherReport) {
     ].join('\t'))
   }
 
-  console.log('\n## 많이 틀린 문제 (최근 24시간, 학생마다 최근 게임 하나)')
+  console.log('\n## 많이 틀린 문제 (기간 안, 학생마다 최근 게임 하나)')
+  if (r.weakness.recordsWithoutAnswers > 0) console.log(`문제별 답안이 없는 예전 기록 ${r.weakness.recordsWithoutAnswers}건은 빠졌습니다.`)
   if (r.weakness.studentIds.length === 0) {
-    console.log('최근 24시간 기록이 없어 문제별 분석을 할 수 없습니다.')
+    console.log('기간 안에 문제별 답안이 있는 기록이 없어 문제별 분석을 할 수 없습니다.')
   } else {
     for (const q of r.weakness.questions) {
       console.log(`${q.questionId}\t${pct(q.wrongRate)} (${q.wrongBy}/${q.solvedBy})${q.reteach ? ' 다시 가르칠 내용' : ''}\t${q.question}\t틀린 학생: ${names(q.wrongStudentIds)}`)

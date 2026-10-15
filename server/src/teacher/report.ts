@@ -35,7 +35,8 @@ export const MIN_SOLVERS = 3
 export const COMPARE_GAP = 20
 export const CLOSE_SCORE = 10
 export const MAX_COMPARE = 30
-export const RECENT_ANSWERS_MS = 24 * 60 * 60 * 1000
+/** Unfinished games are counted over this window (games rows are deleted after 24 hours). */
+export const ABANDONED_WINDOW_MS = 24 * 60 * 60 * 1000
 
 export interface InputStudent {
   id: number
@@ -53,7 +54,7 @@ export interface InputScore {
   playedAt: string
 }
 
-/** A finished game from the last 24 hours with its per-question answers. */
+/** A finished game in the period with its per-question answers (score_answers). */
 export interface InputGame {
   scoreId: number
   nickname: string
@@ -69,8 +70,8 @@ export interface ReportInput {
   students: InputStudent[]
   /** Every finished game in the period, roster or not. */
   scores: InputScore[]
-  /** Finished games started in the last 24 hours. */
-  recentGames: InputGame[]
+  /** Finished games in the period that have per-question answers. */
+  answeredGames: InputGame[]
   /** Nicknames of games started in the last 24 hours and left unfinished. */
   abandonedNicknames: string[]
   /** Questions in play and candidates, by id. */
@@ -305,14 +306,15 @@ function dailyAverages(students: ReportStudent[]): ReportDay[] {
     }))
 }
 
-/** Per-question analysis over each student's latest finished game in the last 24 hours. */
+/** Per-question analysis over each student's latest game in the period that has answers. */
 function weakness(input: ReportInput, studentOf: Map<string, InputStudent>): ReportWeakness {
   const latest = new Map<number, InputGame>()
-  for (const game of [...input.recentGames].sort(byPlayedAt)) {
+  for (const game of [...input.answeredGames].sort(byPlayedAt)) {
     const student = studentOf.get(game.nickname)
     if (student) latest.set(student.id, game)
   }
   const studentIds = [...latest.keys()].sort((a, b) => a - b)
+  const answered = new Set(input.answeredGames.map((g) => g.scoreId))
 
   const tally = new Map<string, { solved: number[]; wrong: number[] }>()
   const wrongByStudent: Record<number, string[]> = {}
@@ -359,7 +361,7 @@ function weakness(input: ReportInput, studentOf: Map<string, InputStudent>): Rep
   const questions = ranked.slice(0, WEAK_QUESTION_LIMIT)
   const cutoff = questions.at(-1)?.wrongRate
   return {
-    since: new Date(input.now - RECENT_ANSWERS_MS).toISOString(),
+    recordsWithoutAnswers: input.scores.filter((r) => studentOf.has(r.nickname) && !answered.has(r.id)).length,
     studentIds,
     fastStudentIds: studentIds.filter((id) => latest.get(id)!.durationSec < FAST_RECORD_SEC),
     questions,
