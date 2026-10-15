@@ -199,6 +199,26 @@ export interface ApiErrorBody {
   message: string
 }
 
+/** One saved record in the teacher's record list (GET /api/teacher/scores). */
+export interface TeacherScoreEntry {
+  id: number
+  nickname: string
+  /** The roster student who uses this nickname, if any. */
+  student: { number: number; name: string } | null
+  score: number
+  durationSec: number
+  playedAt: string
+  /** Under 80 seconds (⏱️) */
+  fast: boolean
+}
+
+/** GET /api/teacher/scores?q=&fast=1 — newest first. */
+export interface TeacherScoresResponse {
+  entries: TeacherScoreEntry[]
+  /** Records matching the search, which may be more than `entries`. */
+  total: number
+}
+
 // ---- Teacher report (GET /api/teacher/report, npm run teacher-report). Rules: docs/teacher-mode.md ----
 
 export type Grade = 'A' | 'B' | 'C' | 'D'

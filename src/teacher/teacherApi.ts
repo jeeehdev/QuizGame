@@ -9,6 +9,8 @@ import type {
   SwapResponse,
   TeacherQuestionsResponse,
   TeacherReport,
+  TeacherScoreEntry,
+  TeacherScoresResponse,
   TeacherSessionResponse,
   UnmatchedNicknamesResponse,
 } from '../types/quiz'
@@ -33,6 +35,15 @@ export const teacherApi = {
     if (compare) query.set('compare', compare.join(','))
     return request<TeacherReport>(`/api/teacher/report?${query}`)
   },
+  /** Saved records, newest first: nickname or student name contains `search`; `fast` keeps only ⏱️ records. */
+  scores: (search: string, fast: boolean) => {
+    const params = new URLSearchParams()
+    if (search) params.set('q', search)
+    if (fast) params.set('fast', '1')
+    const query = params.toString()
+    return request<TeacherScoresResponse>(`/api/teacher/scores${query ? `?${query}` : ''}`)
+  },
+  deleteScore: (id: number) => request<TeacherScoreEntry>(`/api/teacher/scores/${id}`, undefined, 'DELETE'),
   unmatchedNicknames: () => request<UnmatchedNicknamesResponse>('/api/teacher/nicknames/unmatched'),
 }
 

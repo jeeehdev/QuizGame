@@ -11,7 +11,7 @@
 - `npm start`: 빌드된 `dist/`와 API를 한 서버로 제공
 - `npm run lint`: oxlint
 - `npm run review-doc`: `server/data/questions.json`과 `question-candidates.json`에서 `docs/questions-review.md`를 다시 만든다
-- `npm run delete-score -- <id>`: 순위표 기록 하나 삭제
+- `npm run delete-score -- <id>`: 순위표 기록 하나 삭제 (문제별 답안도 함께). 웹 선생님 화면 "기록 관리"도 같은 함수를 쓴다
 - `npm run swap-question -- <출제 id> <후보 id>`: 출제 문제와 같은 카테고리·난이도의 후보 문제를 바꾼다
 - `npm run roster -- <작업>`: 학생 명단(DB) 관리. `npm run import-roster -- teacher/roster.json`으로 예전 파일 가져오기
 - `npm run teacher-fixture -- <새 DB 경로>`: 선생님 모드 명령을 테스트할 DB와 명단을 만든다 (실제 DB 경로는 거부). 명령은 `DB_PATH=<그 경로>`로 실행한다
@@ -28,12 +28,13 @@
   - 새 게임은 출제 문제에서만 뽑고, 저장된 게임은 출제 + 후보 문제 전체에서 id로 찾는다. 그래서 교체 전에 시작한 게임도 원래 문제로 끝난다(재시작 후에도). 문제 id는 재사용하지 않는다
   - 완료 기록의 문제별 결과는 `score_answers`에 기록과 같이 보관한다(기록을 지우면 함께 지워짐). 진행 중 게임(`games`)은 24시간 뒤 지운다
   - `server/src/teacher/`: 선생님 보고서 계산. `report.ts`(순수 함수, 규칙 원문은 `docs/teacher-mode.md`), `reportData.ts`(DB 읽기), `period.ts`(기간 인자), `fixture.ts`(테스트 데이터). API `GET /api/teacher/report`(`teacherReport.ts`)와 CLI `teacher-report`가 함께 쓴다
+  - `server/src/teacherScores.ts`: 선생님 API `GET /api/teacher/scores`(기록 찾기), `DELETE /api/teacher/scores/:id`(기록 삭제)
   - `server/src/teacherAuth.ts`: 선생님 로그인(`/api/teacher/*`). 세션은 토큰 해시만 DB에 저장, 마지막 요청 후 30분 만료, 2분에 5번 틀리면 429. 선생님 기능 라우트는 이 라우터의 `requireTeacher` 뒤에 붙인다
   - `server/test/`: Supertest API 테스트
 - `shared/`: 클라이언트와 서버가 함께 쓰는 API 타입(`types.ts`)과 닉네임 규칙
 - `src/`: React 클라이언트. `src/api/client.ts`로만 서버와 통신하고, 화면 상태는 `src/game/reducer.ts`가 관리한다
   - `src/test/testServer.ts`: 클라이언트 테스트에서 실제 Express 앱과 메모리 DB로 fetch를 처리한다(선생님 세션 쿠키도 주고받음)
-  - `src/teacher/`: `/teacher` 주소의 선생님 화면(로그인, 성적표·학생 비교·약점·추이, 학생 명단, 문제 교체). 성적 화면 4개는 `TeacherApp`이 받아 둔 보고서 하나(`GET /api/teacher/report`)를 함께 쓰고, 값 표시는 `format.ts`(CLI와 같은 반올림)로 한다. `src/Root.tsx`가 주소를 보고 따로 나눈 파일로 불러오므로 학생 번들에는 들어가지 않는다. 선생님 API 호출은 `src/teacher/teacherApi.ts`에만 둔다
+  - `src/teacher/`: `/teacher` 주소의 선생님 화면(로그인, 성적표·학생 비교·약점·추이, 학생 명단, 기록 관리, 문제 교체). 성적 화면 4개는 `TeacherApp`이 받아 둔 보고서 하나(`GET /api/teacher/report`)를 함께 쓰고, 값 표시는 `format.ts`(CLI와 같은 반올림)로 한다. `src/Root.tsx`가 주소를 보고 따로 나눈 파일로 불러오므로 학생 번들에는 들어가지 않는다. 선생님 API 호출은 `src/teacher/teacherApi.ts`에만 둔다
 
 ## 환경 변수
 

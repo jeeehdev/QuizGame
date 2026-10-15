@@ -47,7 +47,7 @@ async function open(section = '성적표') {
   fireEvent.click(screen.getByRole('button', { name: '로그인' }))
   await screen.findByRole('heading', { level: 1, name: '성적표' })
   if (section !== '성적표') await goTo(section)
-  await screen.findByText('3학년 2반')
+  if (section !== '기록 관리') await screen.findByText('3학년 2반')
   return view
 }
 
@@ -194,6 +194,58 @@ describe('추이', () => {
     const rows = bodyRows(/회차별 기록/)
     expect(rows.map((r) => cells(r).slice(0, 5).join(' '))).toEqual(['1회 ' + cells(rows[0])[1] + ' 민수 220 -', expect.stringMatching(/kms01 280 \+60/), expect.stringMatching(/민수 340 \+60/)])
     expect(screen.getByText(/최고 점수: 340점 \(3회차\)/)).toBeTruthy()
+  })
+})
+
+describe('기록 관리', () => {
+  const recordRows = () => bodyRows(/기록 \d+건|찾은 기록이 없습니다/)
+
+  it('lists records newest first and finds them by student name or fast time', async () => {
+    server.db
+      .prepare("INSERT INTO scores (nickname, score, correct_by_category, duration_sec, played_at) VALUES ('번개', 40, '{}', 50, '2026-10-01T00:00:00.000Z')")
+      .run()
+    await open('기록 관리')
+    await screen.findByRole('table', { name: '기록 16건 (최신 순)' })
+    expect(cells(recordRows()[0]).slice(1, 4)).toEqual(['유나', '4 최유나', '190'])
+
+    fireEvent.change(screen.getByLabelText('닉네임 또는 학생 이름'), { target: { value: '김민수' } })
+    fireEvent.click(screen.getByRole('button', { name: '찾기' }))
+    await screen.findByRole('table', { name: '기록 3건 (최신 순)' })
+    expect(recordRows().map((r) => cells(r)[1]).sort()).toEqual(['kms01', '민수', '민수'])
+
+    fireEvent.change(screen.getByLabelText('닉네임 또는 학생 이름'), { target: { value: '' } })
+    fireEvent.click(screen.getByRole('checkbox', { name: /빠른 기록/ }))
+    fireEvent.click(screen.getByRole('button', { name: '찾기' }))
+    await screen.findByRole('table', { name: '기록 1건 (최신 순)' })
+    expect(cells(recordRows()[0]).slice(1, 3)).toEqual(['번개', '미등록'])
+    expect(recordRows()[0].textContent).toMatch(/0:50 ⏱️\(빠른 기록\)/)
+  })
+
+  it('deletes a record only after confirming, and the scores leave the report', async () => {
+    await open('기록 관리')
+    await screen.findByRole('table', { name: '기록 15건 (최신 순)' })
+    const button = screen.getByRole('button', { name: /^기록 #\d+ 유나\(4번 최유나\) 190점 지우기$/ })
+    fireEvent.click(button)
+    fireEvent.click(within(screen.getByRole('alertdialog')).getByRole('button', { name: '취소' }))
+    expect(recordRows()).toHaveLength(15)
+
+    fireEvent.click(button)
+    const dialog = screen.getByRole('alertdialog', { name: '기록을 지울까요?' })
+    expect(dialog.textContent).toMatch(/되돌릴 수 없습니다/)
+    fireEvent.click(within(dialog).getByRole('button', { name: '지우기' }))
+    expect(await screen.findByText(/유나\(4번 최유나\) 190점\)?을\(를\) 지웠습니다/)).toBeTruthy()
+    await screen.findByRole('table', { name: '기록 14건 (최신 순)' })
+
+    await goTo('성적표')
+    await waitFor(() => expect(cells(bodyRows(/학생별 성적표/)[3]).slice(1, 5)).toEqual(['최유나 ', 'C', '4/7', '2']))
+  })
+
+  it('has no serious accessibility violations, with the dialog open', async () => {
+    const { container } = await open('기록 관리')
+    await screen.findByRole('table', { name: '기록 15건 (최신 순)' })
+    expect(await seriousViolations(container)).toEqual([])
+    fireEvent.click(screen.getAllByRole('button', { name: /지우기$/ })[0])
+    expect(await seriousViolations(container)).toEqual([])
   })
 })
 

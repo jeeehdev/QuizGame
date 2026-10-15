@@ -14,7 +14,7 @@ argument-hint: "[show [N] | find <닉네임> | check | delete <기록 id>] (기�
 - 순위 정책은 `server/src/scoreQueries.ts`를 따른다: 게임마다 한 줄(같은 닉네임이 여러 번 나올 수 있음), 점수 높은 순 → 소요 시간 짧은 순, 점수와 시간이 같으면 같은 순위(`RANK()`), 같은 순위 안에서는 먼저 플레이한 순
 - DB 경로는 환경 변수 `DB_PATH`, 없으면 `server/data/quiz.sqlite`
 - 조회 작업(`show`, `find`, `check`)은 DB를 **읽기 전용**으로 연다 (`better-sqlite3`의 `{ readonly: true, fileMustExist: true }`). 일회용 스크립트는 scratchpad에 만들고, 순위는 `scoreQueries.ts`의 `RANKED_SCORES`와 같은 SQL로 계산한다
-- DB를 바꾸는 작업은 `delete`뿐이고, 반드시 `npm run delete-score`로만 한다. SQL로 직접 지우거나 고치지 않는다
+- DB를 바꾸는 작업은 `delete`뿐이고, 반드시 `npm run delete-score`로만 한다. SQL로 직접 지우거나 고치지 않는다 (기록의 문제별 답안 `score_answers`는 함께 지워진다. 선생님은 웹 "기록 관리" 화면에서도 지울 수 있다)
 - 시간은 `played_at`(UTC)을 로컬 시간으로 바꿔 보여 준다. 소요 시간은 분:초
 - 기록이 없으면 "아직 저장된 기록이 없습니다"라고 알린다
 

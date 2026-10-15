@@ -5,6 +5,7 @@ import { fetchResult, teacherApi, type Loaded } from './teacherApi'
 import { ErrorRetry } from '../components/ErrorRetry'
 import { CompareScreen } from './CompareScreen'
 import { LoginScreen } from './LoginScreen'
+import { RecordsScreen } from './RecordsScreen'
 import { ProgressScreen } from './ProgressScreen'
 import { ReportFrame, type ReportState } from './ReportFrame'
 import { RosterScreen } from './RosterScreen'
@@ -21,16 +22,17 @@ type View =
   | { kind: 'app' }
 
 type ReportSection = 'scores' | 'compare' | 'weakness' | 'progress'
-type Section = ReportSection | 'roster' | 'swap'
+type Section = ReportSection | 'roster' | 'records' | 'swap'
 const SECTIONS: { id: Section; label: string }[] = [
   { id: 'scores', label: '성적표' },
   { id: 'compare', label: '학생 비교' },
   { id: 'weakness', label: '약점' },
   { id: 'progress', label: '추이' },
   { id: 'roster', label: '학생 명단' },
+  { id: 'records', label: '기록 관리' },
   { id: 'swap', label: '문제 교체' },
 ]
-const isReportSection = (section: Section): section is ReportSection => !['roster', 'swap'].includes(section)
+const isReportSection = (section: Section): section is ReportSection => !['roster', 'records', 'swap'].includes(section)
 
 /** A finished report request: which period and refresh it answers, and its result. */
 interface LoadedReport {
@@ -174,6 +176,7 @@ export default function TeacherApp() {
             </ReportFrame>
           )}
           {section === 'roster' && <RosterScreen key="roster" onExpired={expired} />}
+          {section === 'records' && <RecordsScreen key="records" onExpired={expired} />}
           {section === 'swap' && <SwapScreen key="swap" onExpired={expired} />}
         </>
       )}

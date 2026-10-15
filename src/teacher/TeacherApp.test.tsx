@@ -250,6 +250,7 @@ describe('menu', () => {
       '약점',
       '추이',
       '학생 명단',
+      '기록 관리',
       '문제 교체',
     ])
     expect(within(menu).getByRole('button', { name: '성적표' }).getAttribute('aria-current')).toBe('page')

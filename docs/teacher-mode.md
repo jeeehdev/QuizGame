@@ -46,7 +46,7 @@ npm run -s teacher-report -- [기간] --json [--compare 1,3,5|all]
 - DB 경로: 환경 변수 `DB_PATH`, 없으면 `server/data/quiz.sqlite`
 - **읽기 전용으로만 연다**: `better-sqlite3`로 `new Database(path, { readonly: true, fileMustExist: true })`. `openDb`는 테이블을 만들므로 쓰지 않는다. `npm run teacher-report`가 이렇게 연다
 - 아래 표와 SQL은 계산 코드(`reportData.ts`)가 읽는 데이터를 설명한다. 명령은 직접 쿼리하지 않고 `npm run teacher-report`를 쓴다
-- 선생님 모드 명령은 DB를 절대 바꾸지 않는다. 기록 삭제는 `/quiz-leaderboard delete`로 한다
+- 선생님 모드 명령은 DB를 절대 바꾸지 않는다. 기록 삭제는 `/quiz-leaderboard delete`나 웹 선생님 화면의 "기록 관리"로 한다 (기록의 문제별 답안도 함께 지워진다)
 
 | 데이터 | 테이블 | 보관 기간 | 쓰는 곳 |
 | --- | --- | --- | --- |
