@@ -8,6 +8,7 @@ import type {
   SwapRequest,
   SwapResponse,
   TeacherQuestionsResponse,
+  TeacherReport,
   TeacherSessionResponse,
   UnmatchedNicknamesResponse,
 } from '../types/quiz'
@@ -26,6 +27,12 @@ export const teacherApi = {
     request<RosterStudent>(`/api/teacher/students/${id}/nicknames`, { nickname }),
   unlinkNickname: (nickname: string) =>
     request<RosterStudent>(`/api/teacher/nicknames/${encodeURIComponent(nickname)}`, undefined, 'DELETE'),
+  /** period: all, today, 7d, 30d or YYYY-MM-DD~YYYY-MM-DD; compare: 출석 번호 to compare (default choice when omitted). */
+  report: (period: string, compare?: number[]) => {
+    const query = new URLSearchParams({ period })
+    if (compare) query.set('compare', compare.join(','))
+    return request<TeacherReport>(`/api/teacher/report?${query}`)
+  },
   unmatchedNicknames: () => request<UnmatchedNicknamesResponse>('/api/teacher/nicknames/unmatched'),
 }
 

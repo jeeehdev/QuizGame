@@ -32,7 +32,7 @@
 - `shared/`: 클라이언트와 서버가 함께 쓰는 API 타입(`types.ts`)과 닉네임 규칙
 - `src/`: React 클라이언트. `src/api/client.ts`로만 서버와 통신하고, 화면 상태는 `src/game/reducer.ts`가 관리한다
   - `src/test/testServer.ts`: 클라이언트 테스트에서 실제 Express 앱과 메모리 DB로 fetch를 처리한다(선생님 세션 쿠키도 주고받음)
-  - `src/teacher/`: `/teacher` 주소의 선생님 화면(로그인, 문제 교체). `src/Root.tsx`가 주소를 보고 따로 나눈 파일로 불러오므로 학생 번들에는 들어가지 않는다. 선생님 API 호출은 `src/teacher/teacherApi.ts`에만 둔다
+  - `src/teacher/`: `/teacher` 주소의 선생님 화면(로그인, 성적표·학생 비교·약점·추이, 학생 명단, 문제 교체). 성적 화면 4개는 `TeacherApp`이 받아 둔 보고서 하나(`GET /api/teacher/report`)를 함께 쓰고, 값 표시는 `format.ts`(CLI와 같은 반올림)로 한다. `src/Root.tsx`가 주소를 보고 따로 나눈 파일로 불러오므로 학생 번들에는 들어가지 않는다. 선생님 API 호출은 `src/teacher/teacherApi.ts`에만 둔다
 
 ## 환경 변수
 
@@ -63,7 +63,7 @@
 - `/teacher-*` 명령은 값을 직접 계산하지 않고 `npm run -s teacher-report -- <기간> --json` 결과를 쓴다
 - `/teacher-mode [기간] [save] [csv|pdf|both]`가 `teacher-roster` → `teacher-scores` → `teacher-weakness` → `teacher-progress` → `teacher-compare`를 차례로 실행해 보고서를 만들고, 형식을 주면 `/export-report`로 내보낸다
 - `/export-report [csv|pdf|both] [보고서.md]`: 저장된 보고서를 CSV(성적표, Excel용 BOM)와 PDF(헤드리스 Chrome/Edge 인쇄)로 내보낸다
-- 웹 화면 선생님 모드(관리자 인증, 문제 교체)는 #39
+- 웹 화면 선생님 모드: 로그인·문제 교체(#39), 학생 명단과 성적 화면(5단계, #51). 웹 성적표와 `/teacher-mode` 보고서는 같은 서버 계산을 쓴다
 
 ## 커밋
 

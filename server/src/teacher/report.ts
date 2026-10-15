@@ -10,6 +10,7 @@ import {
   type ReportCompare,
   type ReportDay,
   type ReportPeriod,
+  type ReportQuestionDetail,
   type ReportRecord,
   type ReportStudent,
   type ReportSummary,
@@ -330,17 +331,18 @@ function weakness(input: ReportInput, studentOf: Map<string, InputStudent>): Rep
     }
   }
 
+  const detail = (questionId: string): ReportQuestionDetail => {
+    const q = input.questions.get(questionId)!
+    return { category: q.category, difficulty: q.difficulty, question: q.question, answer: q.choices[q.answerIndex] }
+  }
   const ranked: ReportWrongQuestion[] = [...tally.entries()]
     .filter(([, t]) => t.solved.length >= MIN_SOLVERS && t.wrong.length > 0)
     .map(([questionId, t]) => {
-      const q = input.questions.get(questionId)!
       const wrongRate = (t.wrong.length / t.solved.length) * 100
+      const q = detail(questionId)
       return {
         questionId,
-        category: q.category,
-        difficulty: q.difficulty,
-        question: q.question,
-        answer: q.choices[q.answerIndex],
+        ...q,
         solvedBy: t.solved.length,
         wrongBy: t.wrong.length,
         wrongRate,
@@ -366,6 +368,9 @@ function weakness(input: ReportInput, studentOf: Map<string, InputStudent>): Rep
         ? []
         : ranked.slice(WEAK_QUESTION_LIMIT).filter((q) => Math.abs(q.wrongRate - cutoff) < EPSILON).map((q) => q.questionId),
     wrongByStudent,
+    questionDetails: Object.fromEntries(
+      [...new Set([...questions.map((q) => q.questionId), ...Object.values(wrongByStudent).flat()])].map((id) => [id, detail(id)]),
+    ),
   }
 }
 

@@ -73,12 +73,23 @@ async function logIn(password = PASSWORD) {
   fireEvent.click(screen.getByRole('button', { name: '로그인' }))
 }
 
-async function openSwapScreen() {
+/** Clicks a teacher menu item and waits for its screen. */
+async function goTo(section: string) {
+  fireEvent.click(within(screen.getByRole('navigation', { name: '선생님 메뉴' })).getByRole('button', { name: section }))
+  await screen.findByRole('heading', { level: 1, name: section })
+}
+
+/** Logs in (landing on 성적표) and opens a section. */
+async function openSection(section: string) {
   const view = await openLogin()
   await logIn()
-  await screen.findByRole('heading', { name: '학생 명단' })
-  fireEvent.click(within(screen.getByRole('navigation', { name: '선생님 메뉴' })).getByRole('button', { name: '문제 교체' }))
-  await screen.findByRole('heading', { name: '문제 교체' })
+  await screen.findByRole('heading', { level: 1, name: '성적표' })
+  if (section !== '성적표') await goTo(section)
+  return view
+}
+
+async function openSwapScreen() {
+  const view = await openSection('문제 교체')
   await screen.findByText(/출제 문제 40개 · 후보 문제 1개/)
   return view
 }
@@ -208,7 +219,7 @@ describe('swap screen', () => {
     await openSwapScreen()
     cleanup()
     render(<TeacherApp />)
-    expect(await screen.findByRole('heading', { name: '학생 명단' })).toBeTruthy()
+    expect(await screen.findByRole('heading', { name: '성적표' })).toBeTruthy()
   })
 
   it('uses native radios and buttons for every control', async () => {
@@ -230,16 +241,27 @@ describe('swap screen', () => {
 })
 
 describe('menu', () => {
-  it('opens on the roster and marks the current section', async () => {
-    await openLogin()
-    await logIn()
-    await screen.findByRole('heading', { name: '학생 명단' })
+  it('opens on the scores and marks the current section', async () => {
+    await openSection('성적표')
     const menu = screen.getByRole('navigation', { name: '선생님 메뉴' })
-    expect(within(menu).getByRole('button', { name: '학생 명단' }).getAttribute('aria-current')).toBe('page')
-    fireEvent.click(within(menu).getByRole('button', { name: '문제 교체' }))
-    await screen.findByRole('heading', { name: '문제 교체' })
+    expect(within(within(menu).getByRole('list')).getAllByRole('button').map((b) => b.textContent)).toEqual([
+      '성적표',
+      '학생 비교',
+      '약점',
+      '추이',
+      '학생 명단',
+      '문제 교체',
+    ])
+    expect(within(menu).getByRole('button', { name: '성적표' }).getAttribute('aria-current')).toBe('page')
+    await goTo('문제 교체')
     expect(within(menu).getByRole('button', { name: '문제 교체' }).getAttribute('aria-current')).toBe('page')
-    expect(within(menu).getByRole('button', { name: '학생 명단' }).getAttribute('aria-current')).toBeNull()
+    expect(within(menu).getByRole('button', { name: '성적표' }).getAttribute('aria-current')).toBeNull()
+  })
+
+  it('moves focus to the heading of the screen it opens', async () => {
+    await openSection('성적표')
+    await goTo('약점')
+    await waitFor(() => expect(document.activeElement).toBe(screen.getByRole('heading', { level: 1, name: '약점' })))
   })
 })
 
@@ -256,9 +278,7 @@ describe('roster screen', () => {
   }
 
   async function openRoster(ready: string) {
-    const view = await openLogin()
-    await logIn()
-    await screen.findByRole('heading', { name: '학생 명단' })
+    const view = await openSection('학생 명단')
     await screen.findByText(ready)
     return view
   }

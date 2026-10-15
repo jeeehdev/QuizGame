@@ -504,3 +504,226 @@
   outline: 3px solid var(--focus);
   outline-offset: 1px;
 }
+
+/* ---- Report screens (성적표 · 학생 비교 · 약점 · 추이) ---- */
+
+.reportBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.periodPicker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.periodFieldset {
+  margin: 0;
+  padding: 0;
+  border: none;
+  min-width: 0;
+}
+
+.periodOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.periodOption {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.periodOption:has(input:checked) {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  font-weight: 600;
+}
+
+.periodOption input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.periodOption input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.rangeRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.liveStatus {
+  margin: 0;
+  min-height: 1.4em;
+  color: var(--text-muted);
+  font-size: 0.9375rem;
+}
+
+.reportHeader {
+  margin: 0;
+  word-break: keep-all;
+}
+
+.reportSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.subTitle {
+  margin: 4px 0 0;
+  font-size: 1rem;
+}
+
+.warning {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--wrong-soft);
+  color: var(--wrong-text);
+  font-weight: 600;
+  word-break: keep-all;
+}
+
+.linkButton {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--primary);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.linkButton:focus-visible,
+.sortButton:focus-visible,
+.tableWrap:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px 16px;
+  margin: 0;
+}
+
+.stats dt {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.stats dd {
+  margin: 2px 0 0;
+  font-weight: 600;
+  word-break: keep-all;
+}
+
+.sortButton {
+  min-height: 32px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--primary);
+  font: inherit;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.flag {
+  white-space: nowrap;
+}
+
+.reportTable {
+  composes: table;
+}
+
+.reportTable td,
+.reportTable th {
+  white-space: nowrap;
+}
+
+.reportTable .questionCell {
+  min-width: 240px;
+  white-space: normal;
+  font-weight: 400;
+  word-break: keep-all;
+}
+
+.reportTable .wrapCell {
+  min-width: 180px;
+  white-space: normal;
+  word-break: keep-all;
+}
+
+.badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: var(--wrong-soft);
+  color: var(--wrong-text);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.list {
+  margin: 0;
+  padding-left: 20px;
+  word-break: keep-all;
+}
+
+.checkGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 6px;
+}
+
+.checkOption {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+
+.checkOption:has(input:checked) {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.checkOption input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+.checkOption input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}

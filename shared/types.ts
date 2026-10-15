@@ -340,6 +340,15 @@ export interface ReportWeakness {
   tiedQuestionIds: string[]
   /** Questions each student got wrong in their latest game, by student id. */
   wrongByStudent: Record<number, string[]>
+  /** Every question that appears in `questions` or `wrongByStudent`, by id. */
+  questionDetails: Record<string, ReportQuestionDetail>
+}
+
+export interface ReportQuestionDetail {
+  category: Category
+  difficulty: Difficulty
+  question: string
+  answer: string
 }
 
 export type CompareItem =

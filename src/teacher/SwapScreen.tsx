@@ -4,10 +4,10 @@ import { ConfirmDialog } from '../components/ConfirmDialog'
 import { ErrorRetry } from '../components/ErrorRetry'
 import { fetchResult, teacherApi, type Loaded } from './teacherApi'
 import { CATEGORIES, CATEGORY_LABELS, type Category, type Difficulty, type QuizQuestion, type TeacherQuestionsResponse } from '../types/quiz'
+import { DIFFICULTY_LABELS } from './format'
 import styles from './Teacher.module.css'
 
 const DIFFICULTIES: Difficulty[] = ['easy', 'medium', 'hard']
-const DIFFICULTY_LABELS: Record<Difficulty, string> = { easy: '쉬움', medium: '보통', hard: '어려움' }
 
 interface Props {
   /** The session ended (401); go back to the login screen. */

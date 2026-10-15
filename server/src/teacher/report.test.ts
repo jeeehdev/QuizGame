@@ -281,6 +281,7 @@ describe('per-question analysis', () => {
     ])
     expect(report.weakness.questions[1]).toMatchObject({ answer: '나', wrongStudentIds: [2, 3] })
     expect(report.weakness.wrongByStudent[1]).toEqual(['q-hard'])
+    expect(Object.keys(report.weakness.questionDetails).sort()).toEqual(['q-easy', 'q-hard'])
   })
 
   it('needs 3 students before giving a wrong rate', () => {

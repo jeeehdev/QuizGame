@@ -1,6 +1,6 @@
 # 선생님 모드 공통 규칙
 
-`.claude/commands/teacher-*.md` 명령과 웹 선생님 화면이 함께 따르는 규칙입니다.
+`.claude/commands/teacher-*.md` 명령과 웹 선생님 화면(`/teacher`의 성적표 · 학생 비교 · 약점 · 추이)이 함께 따르는 규칙입니다.
 
 계산은 `server/src/teacher/`(`report.ts`)에 한 번만 구현되어 있고, 웹 화면(`GET /api/teacher/report`)과 명령(`npm run teacher-report`)이 같은 결과를 씁니다. 이 문서는 그 코드의 규칙 원문이므로, 규칙을 바꾸면 코드와 `report.test.ts`도 함께 바꿉니다.
 
