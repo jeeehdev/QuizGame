@@ -35,3 +35,6 @@ backups/
 
 # Teacher mode roster and reports (student names)
 /teacher/
+
+# Scratch databases for local checks (npm run teacher-fixture -- tmp/fx.sqlite)
+/tmp/
