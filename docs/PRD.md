@@ -1,8 +1,8 @@
-# 상식 퀴즈 게임 — Claude Code 구현 프롬프트 (3단계)
+# 상식 퀴즈 게임 — Claude Code 구현 프롬프트 (5단계)
 
-Oct 13, 2026 · @jihye
+Oct 13, 2026 · @jeeehdev
 
-Doc을 3단계로 나눠 Claude Code에 그대로 붙여 넣을 수 있는 프롬프트로 정리했다. 각 단계는 앞 단계의 결과물 위에 쌓이며, PRD에서 제외한 기능(힌트, 난이도 선택, 로그인 등)은 넣지 않았다.
+Doc을 5단계로 나눠 Claude Code에 그대로 붙여 넣을 수 있는 프롬프트로 정리했다. 각 단계는 앞 단계의 결과물 위에 쌓이며, PRD에서 제외한 기능(힌트, 난이도 선택, 로그인 등)은 넣지 않았다.
 
 ## 사용 방법
 
@@ -17,7 +17,7 @@ Doc을 3단계로 나눠 Claude Code에 그대로 붙여 넣을 수 있는 프�
 | --- | --- |
 | 프론트엔드 | React + TypeScript + Vite |
 | 테스트 | Vitest (+ 3단계 API는 Supertest) |
-| 백엔드 (3단계) | Node.js + Express + SQLite |
+| 백엔드 (5단계) | Node.js + Express + SQLite |
 
 PRD에 기술 스택이 없어 위 조합을 가정했다. 다른 스택을 쓰려면 각 프롬프트의 ‘기술 스택’ 줄만 바꾼다.
 
